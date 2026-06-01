@@ -891,10 +891,15 @@ function updateCountdown() {
 // VIEW MANAGEMENT
 // ══════════════════════════════════════════════════════
 function showView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById(`view-${name}`).classList.add('active');
-  window.scrollTo({top:0,behavior:"instant"});document.documentElement.scrollTop=0;document.body.scrollTop=0;
-  if (name === 'leaderboard') loadLeaderboard();
+  document.getElementById("view-welcome").style.display="none";
+  document.getElementById("view-predictions").style.display="none";
+  document.getElementById("view-leaderboard").style.display="none";
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const el = document.getElementById("view-"+name);
+  el.classList.add("active");
+  el.style.display="";
+  setTimeout(()=>{window.scrollTo(0,0);},10);
+  if (name === "leaderboard") loadLeaderboard();
 }
 
 // ══════════════════════════════════════════════════════
