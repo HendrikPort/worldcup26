@@ -35,10 +35,15 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 ══════════════════════════════ */
 #view-welcome{
   background:url('bg1.png') center center/cover no-repeat;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
   position:relative;min-height:100vh;
+  display:none;
 }
-#view-welcome.active{display:flex}
+#view-welcome.active{
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
 .welcome-overlay{
   position:absolute;inset:0;
   background:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,rgba(0,0,0,0.45) 50%,rgba(0,0,0,0.65) 100%);
