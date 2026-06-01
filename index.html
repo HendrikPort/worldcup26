@@ -1067,9 +1067,9 @@ function buildPredictionForm() {
         <div class="mi-scores">
           <div class="mi-date">${date}</div>
           <div class="mi-inputs">
-            <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" placeholder="0">
+            <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" value="0">
             <span class="mi-sep">–</span>
-            <input class="score-inp" type="number" min="0" max="20" id="pred_a_${key}" placeholder="0">
+            <input class="score-inp" type="number" min="0" max="20" id="pred_a_${key}" value="0">
           </div>
         </div>
         <div class="mi-away">${m.away}${af}</div>
@@ -1096,11 +1096,14 @@ document.getElementById('btn-submit').addEventListener('click', async () => {
     const hv = hEl ? hEl.value.trim() : '';
     const av = aEl ? aEl.value.trim() : '';
     if (hv === '' || av === '') { missing++; return; }
+    const hs = parseInt(hv);
+    const as = parseInt(av);
+    if (isNaN(hs) || isNaN(as)) { missing++; return; }
     preds.push({
       player_name: currentPlayer,
       match: m.match,
-      home_score: parseInt(hv),
-      away_score: parseInt(av)
+      home_score: hs,
+      away_score: as
     });
   });
 
