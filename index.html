@@ -1088,29 +1088,21 @@ function buildPredictionForm() {
 document.getElementById('btn-submit').addEventListener('click', async () => {
   if (!currentPlayer) return;
   const preds = [];
-  let missing = 0;
   ALL_MATCHES.forEach(m => {
     const key = m.match.replace(/[^a-zA-Z0-9]/g,'_');
     const hEl = document.getElementById(`pred_h_${key}`);
     const aEl = document.getElementById(`pred_a_${key}`);
-    const hv = hEl ? hEl.value.trim() : '';
-    const av = aEl ? aEl.value.trim() : '';
-    if (hv === '' || av === '') { missing++; return; }
-    const hs = parseInt(hv);
-    const as = parseInt(av);
-    if (isNaN(hs) || isNaN(as)) { missing++; return; }
+    const hv = hEl ? hEl.value : '0';
+    const av = aEl ? aEl.value : '0';
+    const hs = hv === '' ? 0 : parseInt(hv);
+    const as = av === '' ? 0 : parseInt(av);
     preds.push({
       player_name: currentPlayer,
       match: m.match,
-      home_score: hs,
-      away_score: as
+      home_score: isNaN(hs) ? 0 : hs,
+      away_score: isNaN(as) ? 0 : as
     });
   });
-
-  if (missing > 0) {
-    showToast(`⚠ ${missing} match${missing>1?'es':''} still need scores`, false);
-    return;
-  }
 
   const btn = document.getElementById('btn-submit');
   btn.innerHTML = '<span class="spinner"></span>Submitting…';
