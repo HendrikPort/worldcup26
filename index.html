@@ -247,7 +247,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 }
 .match-input-row{
   display:grid;
-  grid-template-columns:1fr 80px 1fr;
+  grid-template-columns:1fr 90px 1fr;
   align-items:center;
   padding:7px 12px;
   gap:6px;
@@ -271,6 +271,19 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 .score-inp:focus{outline:none;border-color:var(--gold);background:rgba(232,200,74,0.08)}
 .score-inp:disabled{opacity:0.4;cursor:not-allowed}
 .mi-sep{font-size:11px;color:var(--text3);}
+.mi-flag{font-size:18px;line-height:1;}
+.mi-date{
+  font-size:9px;
+  font-family:'Barlow Condensed',sans-serif;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  text-align:center;
+  opacity:0.9;
+  margin-bottom:1px;
+}
+.mi-scores{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:90px;}
+.mi-inputs{display:flex;align-items:center;gap:4px;}
 
 .submit-bar{
   max-width:600px;margin:1.5rem auto 0;
@@ -761,20 +774,112 @@ const GROUPS = [
   { id:'L', teams:['England','Croatia','Ghana','Panama'] },
 ];
 
-const FLAGS = {
-  'Mexico':'🇲🇽','South Africa':'🇿🇦','Korea Republic':'🇰🇷','Czechia':'🇨🇿',
-  'Canada':'🇨🇦','Bosnia & Herz.':'🇧🇦','Qatar':'🇶🇦','Switzerland':'🇨🇭',
-  'Brazil':'🇧🇷','Morocco':'🇲🇦','Haiti':'🇭🇹','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  'USA':'🇺🇸','Paraguay':'🇵🇾','Australia':'🇦🇺','Türkiye':'🇹🇷',
-  'Germany':'🇩🇪','Curaçao':'🇨🇼',"Côte d'Ivoire":'🇨🇮','Ecuador':'🇪🇨',
-  'Netherlands':'🇳🇱','Japan':'🇯🇵','Sweden':'🇸🇪','Tunisia':'🇹🇳',
-  'Belgium':'🇧🇪','Egypt':'🇪🇬','IR Iran':'🇮🇷','New Zealand':'🇳🇿',
-  'Spain':'🇪🇸','Cabo Verde':'🇨🇻','Saudi Arabia':'🇸🇦','Uruguay':'🇺🇾',
-  'France':'🇫🇷','Senegal':'🇸🇳','Iraq':'🇮🇶','Norway':'🇳🇴',
-  'Argentina':'🇦🇷','Algeria':'🇩🇿','Austria':'🇦🇹','Jordan':'🇯🇴',
-  'Portugal':'🇵🇹','Congo DR':'🇨🇩','Uzbekistan':'🇺🇿','Colombia':'🇨🇴',
-  'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
+const SCHEDULE = {
+  // Group A
+  'Mexico vs South Africa':         'Jun 11',
+  'Korea Republic vs Czechia':      'Jun 11',
+  'Mexico vs Korea Republic':       'Jun 18',
+  'South Africa vs Czechia':        'Jun 18',
+  'Mexico vs Czechia':              'Jun 24',
+  'South Africa vs Korea Republic': 'Jun 24',
+  // Group B
+  'Canada vs Bosnia & Herz.':       'Jun 12',
+  'Qatar vs Switzerland':           'Jun 13',
+  'Canada vs Qatar':                'Jun 18',
+  'Bosnia & Herz. vs Switzerland':  'Jun 18',
+  'Canada vs Switzerland':          'Jun 24',
+  'Bosnia & Herz. vs Qatar':        'Jun 24',
+  // Group C
+  'Brazil vs Morocco':              'Jun 13',
+  'Haiti vs Scotland':              'Jun 13',
+  'Brazil vs Haiti':                'Jun 19',
+  'Morocco vs Scotland':            'Jun 19',
+  'Brazil vs Scotland':             'Jun 24',
+  'Morocco vs Haiti':               'Jun 24',
+  // Group D
+  'USA vs Paraguay':                'Jun 12',
+  'Australia vs Türkiye':           'Jun 13',
+  'USA vs Australia':               'Jun 19',
+  'Paraguay vs Türkiye':            'Jun 19',
+  'USA vs Türkiye':                 'Jun 25',
+  'Paraguay vs Australia':          'Jun 25',
+  // Group E
+  'Germany vs Curaçao':             'Jun 14',
+  "Côte d'Ivoire vs Ecuador":       'Jun 14',
+  "Germany vs Côte d'Ivoire":       'Jun 20',
+  'Curaçao vs Ecuador':             'Jun 20',
+  'Germany vs Ecuador':             'Jun 25',
+  "Curaçao vs Côte d'Ivoire":       'Jun 25',
+  // Group F
+  'Netherlands vs Japan':           'Jun 14',
+  'Sweden vs Tunisia':              'Jun 14',
+  'Netherlands vs Sweden':          'Jun 20',
+  'Japan vs Tunisia':               'Jun 20',
+  'Netherlands vs Tunisia':         'Jun 25',
+  'Japan vs Sweden':                'Jun 25',
+  // Group G
+  'Belgium vs Egypt':               'Jun 15',
+  'IR Iran vs New Zealand':         'Jun 15',
+  'Belgium vs IR Iran':             'Jun 21',
+  'Egypt vs New Zealand':           'Jun 21',
+  'Belgium vs New Zealand':         'Jun 26',
+  'Egypt vs IR Iran':               'Jun 26',
+  // Group H
+  'Spain vs Cabo Verde':            'Jun 15',
+  'Saudi Arabia vs Uruguay':        'Jun 15',
+  'Spain vs Saudi Arabia':          'Jun 21',
+  'Cabo Verde vs Uruguay':          'Jun 21',
+  'Spain vs Uruguay':               'Jun 26',
+  'Cabo Verde vs Saudi Arabia':     'Jun 26',
+  // Group I
+  'France vs Senegal':              'Jun 16',
+  'Iraq vs Norway':                 'Jun 16',
+  'France vs Iraq':                 'Jun 22',
+  'Senegal vs Norway':              'Jun 22',
+  'France vs Norway':               'Jun 26',
+  'Senegal vs Iraq':                'Jun 26',
+  // Group J
+  'Argentina vs Algeria':           'Jun 16',
+  'Austria vs Jordan':              'Jun 16',
+  'Argentina vs Austria':           'Jun 22',
+  'Algeria vs Jordan':              'Jun 22',
+  'Argentina vs Jordan':            'Jun 27',
+  'Algeria vs Austria':             'Jun 27',
+  // Group K
+  'Portugal vs Congo DR':           'Jun 17',
+  'Uzbekistan vs Colombia':         'Jun 17',
+  'Portugal vs Uzbekistan':         'Jun 23',
+  'Congo DR vs Colombia':           'Jun 23',
+  'Portugal vs Colombia':           'Jun 27',
+  'Congo DR vs Uzbekistan':         'Jun 27',
+  // Group L
+  'England vs Croatia':             'Jun 17',
+  'Ghana vs Panama':                'Jun 17',
+  'England vs Ghana':               'Jun 23',
+  'Croatia vs Panama':              'Jun 23',
+  'England vs Panama':              'Jun 27',
+  'Croatia vs Ghana':               'Jun 27',
 };
+
+const FLAGS = {
+  'Mexico':'mx','South Africa':'za','Korea Republic':'kr','Czechia':'cz',
+  'Canada':'ca','Bosnia & Herz.':'ba','Qatar':'qa','Switzerland':'ch',
+  'Brazil':'br','Morocco':'ma','Haiti':'ht','Scotland':'gb-sct',
+  'USA':'us','Paraguay':'py','Australia':'au','Türkiye':'tr',
+  'Germany':'de','Curaçao':'cw',"Côte d'Ivoire":'ci','Ecuador':'ec',
+  'Netherlands':'nl','Japan':'jp','Sweden':'se','Tunisia':'tn',
+  'Belgium':'be','Egypt':'eg','IR Iran':'ir','New Zealand':'nz',
+  'Spain':'es','Cabo Verde':'cv','Saudi Arabia':'sa','Uruguay':'uy',
+  'France':'fr','Senegal':'sn','Iraq':'iq','Norway':'no',
+  'Argentina':'ar','Algeria':'dz','Austria':'at','Jordan':'jo',
+  'Portugal':'pt','Congo DR':'cd','Uzbekistan':'uz','Colombia':'co',
+  'England':'gb-eng','Croatia':'hr','Ghana':'gh','Panama':'pa',
+};
+function flag(name) {
+  const code = FLAGS[name];
+  if (!code) return '';
+  return '<img src="https://flagcdn.com/20x15/' + code + '.png" style="width:20px;height:15px;border-radius:2px;vertical-align:middle;margin-right:3px;" alt="' + name + '">';
+}
 
 function getMatches() {
   const matches = [];
@@ -954,14 +1059,20 @@ function buildPredictionForm() {
     let matchRows = '';
     matches.forEach(m => {
       const key = m.match.replace(/[^a-zA-Z0-9]/g,'_');
+      const date = SCHEDULE[m.match] || '';
+      const hf = flag(m.home);
+      const af = flag(m.away);
       matchRows += `<div class="match-input-row">
-        <div class="mi-home">${FLAGS[m.home]||'🏳'} ${m.home}</div>
+        <div class="mi-home">${hf}${m.home}</div>
         <div class="mi-scores">
-          <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" placeholder="0">
-          <span class="mi-sep">–</span>
-          <input class="score-inp" type="number" min="0" max="20" id="pred_a_${key}" placeholder="0">
+          <div class="mi-date">${date}</div>
+          <div class="mi-inputs">
+            <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" placeholder="0">
+            <span class="mi-sep">–</span>
+            <input class="score-inp" type="number" min="0" max="20" id="pred_a_${key}" placeholder="0">
+          </div>
         </div>
-        <div class="mi-away">${m.away} ${FLAGS[m.away]||'🏳'}</div>
+        <div class="mi-away">${m.away}${af}</div>
       </div>`;
     });
     container.innerHTML += `<div class="group-block">
@@ -1113,7 +1224,7 @@ async function openPlayerModal(name) {
         if (!pred) { rows += `<div class="modal-match-row pending"><div class="mm-match">${m.match}</div><div class="mm-pred">—</div><div class="mm-real pending">—</div><div class="mm-real pending">no pred</div><div class="mm-pts wrong">—</div></div>`; return; }
         const predStr = `${pred.home_score}–${pred.away_score}`;
         if (!res || res.h === null) {
-          rows += `<div class="modal-match-row pending"><div class="mm-match">${FLAGS[m.home]||'🏳'} ${m.home} vs ${m.away} ${FLAGS[m.away]||'🏳'}</div><div class="mm-pred">${predStr}</div><div class="mm-real pending" colspan="2">not played</div><div class="mm-pts wrong">—</div></div>`;
+          rows += `<div class="modal-match-row pending"><div class="mm-match">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div><div class="mm-pred">${predStr}</div><div class="mm-real pending" colspan="2">not played</div><div class="mm-pts wrong">—</div></div>`;
           return;
         }
         const realStr = `${res.h}–${res.a}`;
@@ -1125,7 +1236,7 @@ async function openPlayerModal(name) {
           if (pr===rr) { cls='correct'; pts=1; totalPts+=1; totalCorrect++; }
         }
         rows += `<div class="modal-match-row ${cls}">
-          <div class="mm-match">${FLAGS[m.home]||'🏳'} ${m.home} vs ${m.away} ${FLAGS[m.away]||'🏳'}</div>
+          <div class="mm-match">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div>
           <div class="mm-pred">${predStr}</div>
           <div class="mm-real ${cls}">${realStr}</div>
           <div class="mm-pts ${cls}">${pts>0?'+'+pts:'0'}</div>
@@ -1204,7 +1315,7 @@ async function buildAdminPanel() {
       const hv = res ? res.h : '';
       const av = res ? res.a : '';
       rows += `<div class="admin-match-row">
-        <div class="am-name">${FLAGS[m.home]||'🏳'} ${m.home} vs ${m.away} ${FLAGS[m.away]||'🏳'}</div>
+        <div class="am-name">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div>
         <input class="am-inp" type="number" min="0" max="20" id="adm_h_${key}" value="${hv}" placeholder="–">
         <span class="am-sep">–</span>
         <input class="am-inp" type="number" min="0" max="20" id="adm_a_${key}" value="${av}" placeholder="–">
