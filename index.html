@@ -27,7 +27,7 @@
 body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
 
 /* ── VIEWS ── */
-.view{display:none;min-height:100vh}
+.view{display:none;min-height:100vh;width:100%}.view.hidden-view{display:none!important}
 .view.active{display:block}
 
 /* ══════════════════════════════
@@ -620,7 +620,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 </div>
 
 <!-- ══ PAGE 2: PREDICTIONS ══ -->
-<div id="view-predictions" class="view">
+<div id="view-predictions" class="view" style="display:none">
   <div class="predictions-overlay"></div>
   <div class="predictions-inner">
     <div class="app-header">
@@ -652,7 +652,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 </div>
 
 <!-- ══ PAGE 3: LEADERBOARD ══ -->
-<div id="view-leaderboard" class="view">
+<div id="view-leaderboard" class="view" style="display:none">
   <div class="leaderboard-overlay"></div>
   <div class="leaderboard-inner">
     <div class="app-header">
@@ -891,15 +891,21 @@ function updateCountdown() {
 // VIEW MANAGEMENT
 // ══════════════════════════════════════════════════════
 function showView(name) {
-  document.getElementById("view-welcome").style.display="none";
-  document.getElementById("view-predictions").style.display="none";
-  document.getElementById("view-leaderboard").style.display="none";
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  const el = document.getElementById("view-"+name);
-  el.classList.add("active");
-  el.style.display="";
-  setTimeout(()=>{window.scrollTo(0,0);},10);
-  if (name === "leaderboard") loadLeaderboard();
+  // Hide all views
+  ['welcome','predictions','leaderboard'].forEach(v => {
+    const el = document.getElementById('view-'+v);
+    el.classList.remove('active');
+    el.style.display = 'none';
+  });
+  // Show target view
+  const target = document.getElementById('view-'+name);
+  target.style.display = 'block';
+  target.classList.add('active');
+  // Force scroll to top
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  window.scrollTo(0,0);
+  if (name === 'leaderboard') loadLeaderboard();
 }
 
 // ══════════════════════════════════════════════════════
