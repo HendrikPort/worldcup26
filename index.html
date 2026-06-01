@@ -893,7 +893,7 @@ function updateCountdown() {
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(`view-${name}`).classList.add('active');
-  window.scrollTo(0,0);
+  window.scrollTo({top:0,behavior:"instant"});document.documentElement.scrollTop=0;document.body.scrollTop=0;
   if (name === 'leaderboard') loadLeaderboard();
 }
 
