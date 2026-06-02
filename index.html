@@ -264,12 +264,12 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 .mi-away{text-align:left;font-size:12px;color:var(--text2);}
 .mi-scores{display:flex;align-items:center;justify-content:center;gap:4px;}
 .score-inp{
-  width:32px;height:32px;
+  width:42px;height:42px;
   background:rgba(255,255,255,0.07);
   border:1px solid var(--border2);
-  border-radius:5px;
+  border-radius:6px;
   color:#fff;
-  font-size:14px;font-weight:600;text-align:center;
+  font-size:16px;font-weight:600;text-align:center;
   font-family:'Barlow Condensed',sans-serif;
   transition:border-color 0.15s,background 0.15s;
 }
@@ -703,6 +703,14 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   padding: 8px 4px;
   letter-spacing: 0.06em;
 }
+
+/* Hide number input spinners */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] { -moz-appearance: textfield; }
 </style>
 </head>
 <body>
