@@ -1590,12 +1590,15 @@ async function buildAdminPanel() {
       const res = resultsMap[m.match];
       const hv = res ? res.h : '';
       const av = res ? res.a : '';
+      const isSaved = res !== undefined && res !== null;
+      const btnStyle = isSaved ? 'style="background:rgba(74,222,128,0.2);border-color:rgba(74,222,128,0.5);color:#4ade80;"' : '';
+      const btnText = isSaved ? 'SAVED ✓' : 'Save';
       rows += `<div class="admin-match-row">
         <div class="am-name">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div>
         <input class="am-inp" type="number" min="0" max="20" id="adm_h_${key}" value="${hv}" placeholder="–">
         <span class="am-sep">–</span>
         <input class="am-inp" type="number" min="0" max="20" id="adm_a_${key}" value="${av}" placeholder="–">
-        <button class="btn-save-result" onclick="saveAdminResult('${m.match.replace(/'/g,"\\'")}','${key}')">Save</button>
+        <button class="btn-save-result" ${btnStyle} onclick="saveAdminResult('${m.match.replace(/'/g,"\\'")}','${key}')">${btnText}</button>
       </div>`;
     });
     html += `<div class="admin-group"><div class="admin-group-title">Group ${g.id}</div>${rows}</div>`;
