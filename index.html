@@ -1485,7 +1485,7 @@ async function loadLeaderboard() {
     tbody.innerHTML = scored.map((p, i) => {
       const pos = i + 1;
       const posClass = pos===1?'gold':pos===2?'silver':pos===3?'bronze':'';
-      const canViewPreds = isDeadlinePassed || playedMatches > 0 || isAdminMode;
+      const canViewPreds = isDeadlinePassed || isAdminMode;
       return `<tr onclick="${canViewPreds ? `openPlayerModal('${p.name.replace(/'/g,"\\'")}')` : ''}">
         <td><span class="lb-pos ${posClass}">${pos}</span></td>
         <td><div class="lb-name">${p.name}${canViewPreds ? '<span class="lb-name-click">view picks →</span>' : ''}</div></td>
