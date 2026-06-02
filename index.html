@@ -1559,6 +1559,7 @@ async function checkAdminPw() {
     if (data && data.length > 0) {
       errEl.style.display = 'none';
       isAdminMode = true;
+      document.getElementById('admin-pw-input').dataset.pw = pw;
       document.getElementById('admin-pw-wrap').style.display = 'none';
       document.getElementById('admin-content').style.display = 'block';
       await buildAdminPanel();
@@ -1609,10 +1610,26 @@ async function saveAdminResult(match, key) {
   const av = aEl.value.trim();
   if (hv === '' || av === '') { showToast('Enter both scores', false); return; }
   try {
-    await saveResult(match, parseInt(hv), parseInt(av));
+    const pw = document.getElementById('admin-pw-input').dataset.pw || '';
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/dynamic-handler`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      },
+      body: JSON.stringify({
+        match,
+        home_score: parseInt(hv),
+        away_score: parseInt(av),
+        password: pw
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
     showToast(`✓ ${match} saved`, true);
+    loadLeaderboard();
   } catch(e) {
-    showToast('Error saving result', false);
+    showToast('Error saving result: ' + e.message, false);
   }
 }
 
