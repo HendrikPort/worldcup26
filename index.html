@@ -605,6 +605,104 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   animation:spin 0.7s linear infinite;vertical-align:middle;margin-right:6px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════
+   MATCHES PANEL
+══════════════════════════════ */
+.lb-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  align-items: start;
+}
+.matches-panel {
+  position: sticky;
+  top: 70px;
+}
+.matches-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 0.75rem;
+  padding-left: 4px;
+  border-left: 3px solid var(--gold);
+  padding-left: 8px;
+}
+.match-card-today {
+  background: rgba(8,12,24,0.88);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  backdrop-filter: blur(8px);
+}
+.match-card-today .mc-time {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.match-card-today .mc-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mc-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+.mc-team.away { justify-content: flex-end; flex-direction: row-reverse; }
+.mc-team img { width: 22px; height: 16px; border-radius: 2px; }
+.mc-vs {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.match-card-result {
+  background: rgba(8,12,24,0.88);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  backdrop-filter: blur(8px);
+}
+.match-card-result .mc-teams { 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.mc-score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.2rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  background: rgba(232,200,74,0.1);
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+.match-card-result .mc-team { font-size: 12px; }
+.no-matches {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: 'Barlow Condensed', sans-serif;
+  padding: 8px 4px;
+  letter-spacing: 0.06em;
+}
 </style>
 </head>
 <body>
@@ -686,24 +784,34 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
         <h2>🏆 Leaderboard</h2>
         <p id="lb-subtitle">Predictions open — leaderboard updates as matches are played</p>
       </div>
-      <div class="lb-wrap">
-        <div class="lb-legend">
-          <div class="lb-leg-item"><div class="leg-dot leg-green"></div>Exact score (3pts)</div>
-          <div class="lb-leg-item"><div class="leg-dot leg-yellow"></div>Correct result (1pt)</div>
-          <div class="lb-leg-item"><div class="leg-dot leg-grey"></div>Wrong (0pts)</div>
+      <div class="lb-layout">
+        <!-- LEFT: Matches Panel -->
+        <div class="matches-panel">
+          <div class="matches-section-title">Today's Matches</div>
+          <div id="today-matches"><div class="no-matches">Loading...</div></div>
+          <div class="matches-section-title" style="margin-top:1.25rem;">Results</div>
+          <div id="played-matches"><div class="no-matches">Loading...</div></div>
         </div>
-        <table class="lb-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Pts</th>
-              <th>Exact</th>
-              <th>Result</th>
-            </tr>
-          </thead>
-          <tbody id="lb-tbody"></tbody>
-        </table>
+        <!-- RIGHT: Leaderboard -->
+        <div>
+          <div class="lb-legend">
+            <div class="lb-leg-item"><div class="leg-dot leg-green"></div>Exact score (3pts)</div>
+            <div class="lb-leg-item"><div class="leg-dot leg-yellow"></div>Correct result (1pt)</div>
+            <div class="lb-leg-item"><div class="leg-dot leg-grey"></div>Wrong (0pts)</div>
+          </div>
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Pts</th>
+                <th>Exact</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody id="lb-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -765,120 +873,156 @@ const DEADLINE     = new Date('2026-06-10T23:59:59');
 // MATCH DATA — all 12 groups, 72 matches
 // ══════════════════════════════════════════════════════
 const GROUPS = [
-  { id:'A', teams:['Mexico','South Africa','Korea Republic','Czechia'] },
-  { id:'B', teams:['Canada','Bosnia & Herz.','Qatar','Switzerland'] },
+  { id:'A', teams:['Mexico','South Africa','South Korea','Czechia'] },
+  { id:'B', teams:['Canada','Bosnia and Herzegovina','Qatar','Switzerland'] },
   { id:'C', teams:['Brazil','Morocco','Haiti','Scotland'] },
   { id:'D', teams:['USA','Paraguay','Australia','Türkiye'] },
-  { id:'E', teams:['Germany','Curaçao',"Côte d'Ivoire",'Ecuador'] },
+  { id:'E', teams:['Germany','Curaçao',"Ivory Coast",'Ecuador'] },
   { id:'F', teams:['Netherlands','Japan','Sweden','Tunisia'] },
-  { id:'G', teams:['Belgium','Egypt','IR Iran','New Zealand'] },
-  { id:'H', teams:['Spain','Cabo Verde','Saudi Arabia','Uruguay'] },
+  { id:'G', teams:['Belgium','Egypt','Iran','New Zealand'] },
+  { id:'H', teams:['Spain','Cape Verde','Saudi Arabia','Uruguay'] },
   { id:'I', teams:['France','Senegal','Iraq','Norway'] },
   { id:'J', teams:['Argentina','Algeria','Austria','Jordan'] },
-  { id:'K', teams:['Portugal','Congo DR','Uzbekistan','Colombia'] },
+  { id:'K', teams:['Portugal','DR Congo','Uzbekistan','Colombia'] },
   { id:'L', teams:['England','Croatia','Ghana','Panama'] },
 ];
 
 const SCHEDULE = {
   // Group A
-  'Mexico vs South Africa':         'Jun 11',
-  'Korea Republic vs Czechia':      'Jun 11',
-  'Mexico vs Korea Republic':       'Jun 18',
-  'South Africa vs Czechia':        'Jun 18',
-  'Mexico vs Czechia':              'Jun 24',
-  'South Africa vs Korea Republic': 'Jun 24',
+  'Mexico vs South Africa':              { date:'Jun 11', time:'22:00' },
+  'South Korea vs Czechia':              { date:'Jun 12', time:'05:00' },
+  'Czechia vs South Africa':             { date:'Jun 18', time:'19:00' },
+  'Mexico vs South Korea':               { date:'Jun 19', time:'04:00' },
+  'Czechia vs Mexico':                   { date:'Jun 25', time:'04:00' },
+  'South Africa vs South Korea':         { date:'Jun 25', time:'04:00' },
   // Group B
-  'Canada vs Bosnia & Herz.':       'Jun 12',
-  'Qatar vs Switzerland':           'Jun 13',
-  'Canada vs Qatar':                'Jun 18',
-  'Bosnia & Herz. vs Switzerland':  'Jun 18',
-  'Canada vs Switzerland':          'Jun 24',
-  'Bosnia & Herz. vs Qatar':        'Jun 24',
+  'Canada vs Bosnia and Herzegovina':    { date:'Jun 12', time:'22:00' },
+  'Qatar vs Switzerland':                { date:'Jun 13', time:'22:00' },
+  'Switzerland vs Bosnia and Herzegovina':{ date:'Jun 18', time:'22:00' },
+  'Canada vs Qatar':                     { date:'Jun 19', time:'01:00' },
+  'Bosnia and Herzegovina vs Qatar':     { date:'Jun 24', time:'22:00' },
+  'Switzerland vs Canada':               { date:'Jun 24', time:'22:00' },
   // Group C
-  'Brazil vs Morocco':              'Jun 13',
-  'Haiti vs Scotland':              'Jun 13',
-  'Brazil vs Haiti':                'Jun 19',
-  'Morocco vs Scotland':            'Jun 19',
-  'Brazil vs Scotland':             'Jun 24',
-  'Morocco vs Haiti':               'Jun 24',
+  'Brazil vs Morocco':                   { date:'Jun 14', time:'01:00' },
+  'Haiti vs Scotland':                   { date:'Jun 14', time:'04:00' },
+  'Scotland vs Morocco':                 { date:'Jun 20', time:'01:00' },
+  'Brazil vs Haiti':                     { date:'Jun 20', time:'03:30' },
+  'Morocco vs Haiti':                    { date:'Jun 25', time:'01:00' },
+  'Scotland vs Brazil':                  { date:'Jun 25', time:'01:00' },
   // Group D
-  'USA vs Paraguay':                'Jun 12',
-  'Australia vs Türkiye':           'Jun 13',
-  'USA vs Australia':               'Jun 19',
-  'Paraguay vs Türkiye':            'Jun 19',
-  'USA vs Türkiye':                 'Jun 25',
-  'Paraguay vs Australia':          'Jun 25',
+  'USA vs Paraguay':                     { date:'Jun 13', time:'04:00' },
+  'Australia vs Türkiye':                { date:'Jun 14', time:'07:00' },
+  'USA vs Australia':                    { date:'Jun 19', time:'22:00' },
+  'Türkiye vs Paraguay':                 { date:'Jun 20', time:'06:00' },
+  'Paraguay vs Australia':               { date:'Jun 26', time:'05:00' },
+  'Türkiye vs USA':                      { date:'Jun 26', time:'05:00' },
   // Group E
-  'Germany vs Curaçao':             'Jun 14',
-  "Côte d'Ivoire vs Ecuador":       'Jun 14',
-  "Germany vs Côte d'Ivoire":       'Jun 20',
-  'Curaçao vs Ecuador':             'Jun 20',
-  'Germany vs Ecuador':             'Jun 25',
-  "Curaçao vs Côte d'Ivoire":       'Jun 25',
+  'Germany vs Curaçao':                  { date:'Jun 14', time:'20:00' },
+  'Ivory Coast vs Ecuador':              { date:'Jun 15', time:'02:00' },
+  'Germany vs Ivory Coast':              { date:'Jun 20', time:'23:00' },
+  'Ecuador vs Curaçao':                  { date:'Jun 21', time:'03:00' },
+  'Curaçao vs Ivory Coast':              { date:'Jun 25', time:'23:00' },
+  'Ecuador vs Germany':                  { date:'Jun 25', time:'23:00' },
   // Group F
-  'Netherlands vs Japan':           'Jun 14',
-  'Sweden vs Tunisia':              'Jun 14',
-  'Netherlands vs Sweden':          'Jun 20',
-  'Japan vs Tunisia':               'Jun 20',
-  'Netherlands vs Tunisia':         'Jun 25',
-  'Japan vs Sweden':                'Jun 25',
+  'Netherlands vs Japan':                { date:'Jun 14', time:'23:00' },
+  'Sweden vs Tunisia':                   { date:'Jun 15', time:'05:00' },
+  'Netherlands vs Sweden':               { date:'Jun 20', time:'20:00' },
+  'Tunisia vs Japan':                    { date:'Jun 21', time:'07:00' },
+  'Japan vs Sweden':                     { date:'Jun 26', time:'02:00' },
+  'Tunisia vs Netherlands':              { date:'Jun 26', time:'02:00' },
   // Group G
-  'Belgium vs Egypt':               'Jun 15',
-  'IR Iran vs New Zealand':         'Jun 15',
-  'Belgium vs IR Iran':             'Jun 21',
-  'Egypt vs New Zealand':           'Jun 21',
-  'Belgium vs New Zealand':         'Jun 26',
-  'Egypt vs IR Iran':               'Jun 26',
+  'Belgium vs Egypt':                    { date:'Jun 15', time:'22:00' },
+  'Iran vs New Zealand':                 { date:'Jun 16', time:'04:00' },
+  'Belgium vs Iran':                     { date:'Jun 21', time:'22:00' },
+  'New Zealand vs Egypt':                { date:'Jun 22', time:'04:00' },
+  'Egypt vs Iran':                       { date:'Jun 27', time:'06:00' },
+  'New Zealand vs Belgium':              { date:'Jun 27', time:'06:00' },
   // Group H
-  'Spain vs Cabo Verde':            'Jun 15',
-  'Saudi Arabia vs Uruguay':        'Jun 15',
-  'Spain vs Saudi Arabia':          'Jun 21',
-  'Cabo Verde vs Uruguay':          'Jun 21',
-  'Spain vs Uruguay':               'Jun 26',
-  'Cabo Verde vs Saudi Arabia':     'Jun 26',
+  'Spain vs Cape Verde':                 { date:'Jun 15', time:'19:00' },
+  'Saudi Arabia vs Uruguay':             { date:'Jun 16', time:'01:00' },
+  'Spain vs Saudi Arabia':               { date:'Jun 21', time:'19:00' },
+  'Uruguay vs Cape Verde':               { date:'Jun 22', time:'01:00' },
+  'Cape Verde vs Saudi Arabia':          { date:'Jun 27', time:'03:00' },
+  'Uruguay vs Spain':                    { date:'Jun 27', time:'03:00' },
   // Group I
-  'France vs Senegal':              'Jun 16',
-  'Iraq vs Norway':                 'Jun 16',
-  'France vs Iraq':                 'Jun 22',
-  'Senegal vs Norway':              'Jun 22',
-  'France vs Norway':               'Jun 26',
-  'Senegal vs Iraq':                'Jun 26',
+  'France vs Senegal':                   { date:'Jun 16', time:'22:00' },
+  'Iraq vs Norway':                      { date:'Jun 17', time:'01:00' },
+  'France vs Iraq':                      { date:'Jun 23', time:'00:00' },
+  'Norway vs Senegal':                   { date:'Jun 23', time:'03:00' },
+  'Norway vs France':                    { date:'Jun 26', time:'22:00' },
+  'Senegal vs Iraq':                     { date:'Jun 26', time:'22:00' },
   // Group J
-  'Argentina vs Algeria':           'Jun 16',
-  'Austria vs Jordan':              'Jun 16',
-  'Argentina vs Austria':           'Jun 22',
-  'Algeria vs Jordan':              'Jun 22',
-  'Argentina vs Jordan':            'Jun 27',
-  'Algeria vs Austria':             'Jun 27',
+  'Argentina vs Algeria':                { date:'Jun 17', time:'04:00' },
+  'Austria vs Jordan':                   { date:'Jun 17', time:'07:00' },
+  'Argentina vs Austria':                { date:'Jun 22', time:'20:00' },
+  'Jordan vs Algeria':                   { date:'Jun 23', time:'06:00' },
+  'Algeria vs Austria':                  { date:'Jun 28', time:'05:00' },
+  'Jordan vs Argentina':                 { date:'Jun 28', time:'05:00' },
   // Group K
-  'Portugal vs Congo DR':           'Jun 17',
-  'Uzbekistan vs Colombia':         'Jun 17',
-  'Portugal vs Uzbekistan':         'Jun 23',
-  'Congo DR vs Colombia':           'Jun 23',
-  'Portugal vs Colombia':           'Jun 27',
-  'Congo DR vs Uzbekistan':         'Jun 27',
+  'Portugal vs DR Congo':                { date:'Jun 17', time:'20:00' },
+  'Uzbekistan vs Colombia':              { date:'Jun 18', time:'05:00' },
+  'Portugal vs Uzbekistan':              { date:'Jun 23', time:'20:00' },
+  'Colombia vs DR Congo':                { date:'Jun 24', time:'05:00' },
+  'Colombia vs Portugal':                { date:'Jun 28', time:'02:30' },
+  'DR Congo vs Uzbekistan':              { date:'Jun 28', time:'02:30' },
   // Group L
-  'England vs Croatia':             'Jun 17',
-  'Ghana vs Panama':                'Jun 17',
-  'England vs Ghana':               'Jun 23',
-  'Croatia vs Panama':              'Jun 23',
-  'England vs Panama':              'Jun 27',
-  'Croatia vs Ghana':               'Jun 27',
+  'England vs Croatia':                  { date:'Jun 17', time:'23:00' },
+  'Ghana vs Panama':                     { date:'Jun 18', time:'02:00' },
+  'England vs Ghana':                    { date:'Jun 23', time:'23:00' },
+  'Panama vs Croatia':                   { date:'Jun 24', time:'02:00' },
+  'Croatia vs Ghana':                    { date:'Jun 28', time:'00:00' },
+  'Panama vs England':                   { date:'Jun 28', time:'00:00' },
 };
 
 const FLAGS = {
-  'Mexico':'mx','South Africa':'za','Korea Republic':'kr','Czechia':'cz',
-  'Canada':'ca','Bosnia & Herz.':'ba','Qatar':'qa','Switzerland':'ch',
-  'Brazil':'br','Morocco':'ma','Haiti':'ht','Scotland':'gb-sct',
-  'USA':'us','Paraguay':'py','Australia':'au','Türkiye':'tr',
-  'Germany':'de','Curaçao':'cw',"Côte d'Ivoire":'ci','Ecuador':'ec',
-  'Netherlands':'nl','Japan':'jp','Sweden':'se','Tunisia':'tn',
-  'Belgium':'be','Egypt':'eg','IR Iran':'ir','New Zealand':'nz',
-  'Spain':'es','Cabo Verde':'cv','Saudi Arabia':'sa','Uruguay':'uy',
-  'France':'fr','Senegal':'sn','Iraq':'iq','Norway':'no',
-  'Argentina':'ar','Algeria':'dz','Austria':'at','Jordan':'jo',
-  'Portugal':'pt','Congo DR':'cd','Uzbekistan':'uz','Colombia':'co',
-  'England':'gb-eng','Croatia':'hr','Ghana':'gh','Panama':'pa',
+  'Mexico':String.fromCodePoint(0x1F1F2,0x1F1FD),
+  'South Africa':String.fromCodePoint(0x1F1FF,0x1F1E6),
+  'South Korea':String.fromCodePoint(0x1F1F0,0x1F1F7),
+  'Czechia':String.fromCodePoint(0x1F1E8,0x1F1FF),
+  'Canada':String.fromCodePoint(0x1F1E8,0x1F1E6),
+  'Bosnia and Herzegovina':String.fromCodePoint(0x1F1E7,0x1F1E6),
+  'Qatar':String.fromCodePoint(0x1F1F6,0x1F1E6),
+  'Switzerland':String.fromCodePoint(0x1F1E8,0x1F1ED),
+  'Brazil':String.fromCodePoint(0x1F1E7,0x1F1F7),
+  'Morocco':String.fromCodePoint(0x1F1F2,0x1F1E6),
+  'Haiti':String.fromCodePoint(0x1F1ED,0x1F1F9),
+  'Scotland':String.fromCodePoint(0x1F3F4,0xE0067,0xE0062,0xE0073,0xE0063,0xE0074,0xE007F),
+  'USA':String.fromCodePoint(0x1F1FA,0x1F1F8),
+  'Paraguay':String.fromCodePoint(0x1F1F5,0x1F1FE),
+  'Australia':String.fromCodePoint(0x1F1E6,0x1F1FA),
+  'Türkiye':String.fromCodePoint(0x1F1F9,0x1F1F7),
+  'Germany':String.fromCodePoint(0x1F1E9,0x1F1EA),
+  'Curaçao':String.fromCodePoint(0x1F1E8,0x1F1FC),
+  'Ivory Coast':String.fromCodePoint(0x1F1E8,0x1F1EE),
+  'Ecuador':String.fromCodePoint(0x1F1EA,0x1F1E8),
+  'Netherlands':String.fromCodePoint(0x1F1F3,0x1F1F1),
+  'Japan':String.fromCodePoint(0x1F1EF,0x1F1F5),
+  'Sweden':String.fromCodePoint(0x1F1F8,0x1F1EA),
+  'Tunisia':String.fromCodePoint(0x1F1F9,0x1F1F3),
+  'Belgium':String.fromCodePoint(0x1F1E7,0x1F1EA),
+  'Egypt':String.fromCodePoint(0x1F1EA,0x1F1EC),
+  'Iran':String.fromCodePoint(0x1F1EE,0x1F1F7),
+  'New Zealand':String.fromCodePoint(0x1F1F3,0x1F1FF),
+  'Spain':String.fromCodePoint(0x1F1EA,0x1F1F8),
+  'Cape Verde':String.fromCodePoint(0x1F1E8,0x1F1FB),
+  'Saudi Arabia':String.fromCodePoint(0x1F1F8,0x1F1E6),
+  'Uruguay':String.fromCodePoint(0x1F1FA,0x1F1FE),
+  'France':String.fromCodePoint(0x1F1EB,0x1F1F7),
+  'Senegal':String.fromCodePoint(0x1F1F8,0x1F1F3),
+  'Iraq':String.fromCodePoint(0x1F1EE,0x1F1F6),
+  'Norway':String.fromCodePoint(0x1F1F3,0x1F1F4),
+  'Argentina':String.fromCodePoint(0x1F1E6,0x1F1F7),
+  'Algeria':String.fromCodePoint(0x1F1E9,0x1F1FF),
+  'Austria':String.fromCodePoint(0x1F1E6,0x1F1F9),
+  'Jordan':String.fromCodePoint(0x1F1EF,0x1F1F4),
+  'Portugal':String.fromCodePoint(0x1F1F5,0x1F1F9),
+  'DR Congo':String.fromCodePoint(0x1F1E8,0x1F1E9),
+  'Uzbekistan':String.fromCodePoint(0x1F1FA,0x1F1FF),
+  'Colombia':String.fromCodePoint(0x1F1E8,0x1F1F4),
+  'England':String.fromCodePoint(0x1F3F4,0xE0067,0xE0062,0xE0065,0xE006E,0xE0067,0xE007F),
+  'Croatia':String.fromCodePoint(0x1F1ED,0x1F1F7),
+  'Ghana':String.fromCodePoint(0x1F1EC,0x1F1ED),
+  'Panama':String.fromCodePoint(0x1F1F5,0x1F1E6),
 };
 function flag(name) {
   const code = FLAGS[name];
@@ -1064,13 +1208,14 @@ function buildPredictionForm() {
     let matchRows = '';
     matches.forEach(m => {
       const key = m.match.replace(/[^a-zA-Z0-9]/g,'_');
-      const date = SCHEDULE[m.match] || '';
+      const sched = SCHEDULE[m.match] || {};
+      const dateStr = sched.date ? sched.date + (sched.time ? ' · ' + sched.time : '') : '';
       const hf = flag(m.home);
       const af = flag(m.away);
       matchRows += `<div class="match-input-row">
         <div class="mi-home">${hf}${m.home}</div>
         <div class="mi-scores">
-          <div class="mi-date">${date}</div>
+          <div class="mi-date">${dateStr}</div>
           <div class="mi-inputs">
             <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" value="0">
             <span class="mi-sep">–</span>
@@ -1131,6 +1276,95 @@ function goToMyPreds() {
   showView('predictions');
 }
 
+
+// ══════════════════════════════════════════════════════
+// MATCHES PANEL
+// ══════════════════════════════════════════════════════
+function renderMatchesPanel(results) {
+  const resultsMap = {};
+  results.forEach(r => { resultsMap[r.match] = { h: r.home_score, a: r.away_score }; });
+
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }).replace(' ', ' ');
+
+  // Map month names to match schedule format
+  const monthMap = {
+    'Jan':'Jan','Feb':'Feb','Mar':'Mar','Apr':'Apr','May':'May','Jun':'Jun',
+    'Jul':'Jul','Aug':'Aug','Sep':'Sep','Oct':'Oct','Nov':'Nov','Dec':'Dec'
+  };
+
+  // Get today's date in "Jun 11" format
+  const todayFormatted = now.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+
+  const todayMatches = [];
+  const playedMatches = [];
+
+  ALL_MATCHES.forEach(m => {
+    const sched = SCHEDULE[m.match];
+    if (!sched) return;
+    const res = resultsMap[m.match];
+    if (res !== undefined) {
+      playedMatches.push({ ...m, sched, res });
+    } else if (sched.date === todayFormatted) {
+      todayMatches.push({ ...m, sched });
+    }
+  });
+
+  // Render today's matches
+  const todayEl = document.getElementById('today-matches');
+  if (todayMatches.length === 0) {
+    // Find next matchday
+    const upcoming = ALL_MATCHES
+      .filter(m => SCHEDULE[m.match] && !resultsMap[m.match])
+      .slice(0, 3);
+    if (upcoming.length === 0) {
+      todayEl.innerHTML = '<div class="no-matches">All matches played!</div>';
+    } else {
+      const nextDate = SCHEDULE[upcoming[0].match].date;
+      todayEl.innerHTML = `<div class="no-matches">No matches today — next: ${nextDate}</div>` +
+        upcoming.map(m => {
+          const s = SCHEDULE[m.match];
+          return `<div class="match-card-today">
+            <div class="mc-time">${s.date} · ${s.time} EEST</div>
+            <div class="mc-teams">
+              <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
+              <div class="mc-vs">VS</div>
+              <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+            </div>
+          </div>`;
+        }).join('');
+    }
+  } else {
+    todayEl.innerHTML = todayMatches.map(m => {
+      const s = SCHEDULE[m.match];
+      return `<div class="match-card-today">
+        <div class="mc-time">${s.time} EEST</div>
+        <div class="mc-teams">
+          <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
+          <div class="mc-vs">VS</div>
+          <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Render played matches (most recent first)
+  const playedEl = document.getElementById('played-matches');
+  if (playedMatches.length === 0) {
+    playedEl.innerHTML = '<div class="no-matches">No results yet</div>';
+  } else {
+    playedEl.innerHTML = playedMatches.reverse().map(m => {
+      return `<div class="match-card-result">
+        <div class="mc-teams">
+          <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
+          <div class="mc-score">${m.res.h} – ${m.res.a}</div>
+          <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
 // ══════════════════════════════════════════════════════
 // LEADERBOARD
 // ══════════════════════════════════════════════════════
@@ -1152,6 +1386,7 @@ async function loadLeaderboard() {
     results.forEach(r => { resultsMap[r.match] = { h: r.home_score, a: r.away_score }; });
 
     const playedMatches = results.length;
+    renderMatchesPanel(results);
     document.getElementById('lb-subtitle').textContent = playedMatches > 0
       ? `${playedMatches} of 72 matches played — leaderboard live`
       : 'Predictions open — leaderboard updates as matches are played';
