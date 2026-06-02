@@ -650,10 +650,10 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   text-transform: uppercase;
 }
 .match-card-today .mc-teams {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 .mc-team {
   display: flex;
@@ -662,7 +662,6 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
-  flex: 1;
 }
 .mc-team.away { justify-content: flex-end; flex-direction: row-reverse; }
 .mc-team img { width: 22px; height: 16px; border-radius: 2px; }
@@ -671,6 +670,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   font-size: 1rem;
   color: var(--text3);
   flex-shrink: 0;
+  text-align: center;
 }
 .match-card-result {
   background: rgba(8,12,24,0.88);
@@ -681,9 +681,9 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   backdrop-filter: blur(8px);
 }
 .match-card-result .mc-teams { 
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 6px;
 }
 .mc-score {
@@ -697,6 +697,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   border-radius: 4px;
 }
 .match-card-result .mc-team { font-size: 12px; }
+.match-card-result .mc-team.away { justify-content: flex-end; flex-direction: row-reverse; }
 .no-matches {
   font-size: 12px;
   color: var(--text3);
@@ -1428,7 +1429,7 @@ function renderMatchesPanel(results) {
         <div class="mc-teams">
           <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
           <div class="mc-score">${m.res.h} – ${m.res.a}</div>
-          <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+          <div class="mc-team away"><span>${m.away}</span> ${flag(m.away)}</div>
         </div>
       </div>`;
     }).join('');
