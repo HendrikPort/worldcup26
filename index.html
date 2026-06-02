@@ -1522,10 +1522,16 @@ document.getElementById('player-modal').addEventListener('click', e => {
 // ══════════════════════════════════════════════════════
 function openAdmin() {
   document.getElementById('admin-overlay').classList.add('open');
-  document.getElementById('admin-pw-input').value = '';
-  document.getElementById('admin-pw-error').style.display = 'none';
-  document.getElementById('admin-pw-wrap').style.display = 'block';
-  document.getElementById('admin-content').style.display = 'none';
+  if (isAdminMode) {
+    document.getElementById('admin-pw-wrap').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    buildAdminPanel();
+  } else {
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('admin-pw-error').style.display = 'none';
+    document.getElementById('admin-pw-wrap').style.display = 'block';
+    document.getElementById('admin-content').style.display = 'none';
+  }
 }
 
 function closeAdmin() {
