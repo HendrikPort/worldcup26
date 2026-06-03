@@ -650,31 +650,40 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   text-transform: uppercase;
 }
 .match-card-today .mc-teams {
-  display: flex;
-  align-items: center;
-  gap: 0;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
-.mc-team {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.mc-team-home {
+  display: table-cell;
+  width: 45%;
+  text-align: left;
+  vertical-align: middle;
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
-  flex: 1;
+  padding-right: 4px;
 }
-.mc-team.away { 
-  justify-content: flex-end; 
-  flex-direction: row-reverse;
+.mc-team-home img { vertical-align: middle; margin-right: 5px; width:20px; height:15px; border-radius:2px; }
+.mc-team-away {
+  display: table-cell;
+  width: 45%;
+  text-align: right;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  padding-left: 4px;
 }
-.mc-team img { width: 22px; height: 16px; border-radius: 2px; flex-shrink:0; }
+.mc-team-away img { vertical-align: middle; margin-left: 5px; width:20px; height:15px; border-radius:2px; }
 .mc-vs {
+  display: table-cell;
+  width: 10%;
+  text-align: center;
+  vertical-align: middle;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1rem;
   color: var(--text3);
-  flex-shrink: 0;
-  width: 40px;
-  text-align: center;
 }
 .match-card-result {
   background: rgba(8,12,24,0.88);
@@ -1402,9 +1411,9 @@ function renderMatchesPanel(results) {
           return `<div class="match-card-today">
             <div class="mc-time">${s.date} · ${s.time} EEST</div>
             <div class="mc-teams">
-              <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
+              <div class="mc-team-home">${flag(m.home)}<span>${m.home}</span></div>
               <div class="mc-vs">VS</div>
-              <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+              <div class="mc-team-away"><span>${m.away}</span>${flag(m.away)}</div>
             </div>
           </div>`;
         }).join('');
@@ -1415,9 +1424,9 @@ function renderMatchesPanel(results) {
       return `<div class="match-card-today">
         <div class="mc-time">${s.time} EEST</div>
         <div class="mc-teams">
-          <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
+          <div class="mc-team-home">${flag(m.home)}<span>${m.home}</span></div>
           <div class="mc-vs">VS</div>
-          <div class="mc-team away"><span>${m.away}</span>${flag(m.away)}</div>
+          <div class="mc-team-away"><span>${m.away}</span>${flag(m.away)}</div>
         </div>
       </div>`;
     }).join('');
