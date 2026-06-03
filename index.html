@@ -650,10 +650,9 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   text-transform: uppercase;
 }
 .match-card-today .mc-teams {
-  display: grid;
-  grid-template-columns: 1fr 40px 1fr;
+  display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 .mc-team {
   display: flex;
@@ -662,14 +661,19 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
+  flex: 1;
 }
-.mc-team.away { justify-content: flex-end; flex-direction: row-reverse; }
-.mc-team img { width: 22px; height: 16px; border-radius: 2px; }
+.mc-team.away { 
+  justify-content: flex-end; 
+  flex-direction: row-reverse;
+}
+.mc-team img { width: 22px; height: 16px; border-radius: 2px; flex-shrink:0; }
 .mc-vs {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1rem;
   color: var(--text3);
   flex-shrink: 0;
+  width: 40px;
   text-align: center;
 }
 .match-card-result {
