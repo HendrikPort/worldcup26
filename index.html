@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
+<!-- v42 — display FIFA order + date-sorted matches panel (no data changes) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1127,6 +1128,72 @@ function getMatches() {
 const ALL_MATCHES = getMatches();
 
 // ══════════════════════════════════════════════════════
+// DISPLAY ORDER FIX (cosmetic only — does NOT touch stored data)
+// These 24 matches are stored with home/away in a different order
+// than the official FIFA fixture order. We flip ONLY how they are
+// displayed (team names + scores together), never how they are stored
+// or saved. A prediction's meaning is fully preserved.
+// ══════════════════════════════════════════════════════
+const FLIP_DISPLAY = new Set([
+  'South Africa vs Czechia',
+  'Mexico vs Czechia',
+  'Bosnia and Herzegovina vs Switzerland',
+  'Canada vs Switzerland',
+  'Morocco vs Scotland',
+  'Brazil vs Scotland',
+  'Paraguay vs Türkiye',
+  'USA vs Türkiye',
+  'Curaçao vs Ecuador',
+  'Germany vs Ecuador',
+  'Japan vs Tunisia',
+  'Netherlands vs Tunisia',
+  'Egypt vs New Zealand',
+  'Belgium vs New Zealand',
+  'Cape Verde vs Uruguay',
+  'Spain vs Uruguay',
+  'Senegal vs Norway',
+  'France vs Norway',
+  'Algeria vs Jordan',
+  'Argentina vs Jordan',
+  'DR Congo vs Colombia',
+  'Portugal vs Colombia',
+  'Croatia vs Panama',
+  'England vs Panama',
+]);
+
+// Returns how a match should be DISPLAYED: { home, away } team names
+// in correct FIFA order. Stored key is unchanged.
+function dispTeams(m) {
+  if (FLIP_DISPLAY.has(m.match)) return { home: m.away, away: m.home };
+  return { home: m.home, away: m.away };
+}
+// Given stored home/away scores for a match, return them oriented to
+// the DISPLAY order (flips the pair when the match is flipped).
+function dispScores(matchKey, h, a) {
+  if (FLIP_DISPLAY.has(matchKey)) return { h: a, a: h };
+  return { h, a };
+}
+// The match key as it should READ in FIFA order (for SCHEDULE-independent display)
+function dispMatchLabel(m) {
+  const t = dispTeams(m);
+  return `${t.home} vs ${t.away}`;
+}
+
+// Convert a match's SCHEDULE entry into a real Date (kickoff in EEST = UTC+3).
+// Returns a Date for sorting / today-detection, or null if no schedule.
+const _MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function matchDate(matchKey) {
+  const s = SCHEDULE[matchKey];
+  if (!s || !s.date || !s.time) return null;
+  const [monStr, dayStr] = s.date.split(' ');      // e.g. "Jun 11"
+  const [hh, mm] = s.time.split(':').map(Number);   // e.g. "22:00"
+  const mon = _MONTHS[monStr];
+  if (mon === undefined) return null;
+  // EEST is UTC+3 → subtract 3h to get the UTC instant of kickoff
+  return new Date(Date.UTC(2026, mon, Number(dayStr), hh - 3, mm));
+}
+
+// ══════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════
 let currentPlayer = null;
@@ -1294,19 +1361,27 @@ function buildPredictionForm() {
       const key = m.match.replace(/[^a-zA-Z0-9]/g,'_');
       const sched = SCHEDULE[m.match] || {};
       const dateStr = sched.date ? sched.date + (sched.time ? ' · ' + sched.time : '') : '';
-      const hf = flag(m.home);
-      const af = flag(m.away);
+      const t = dispTeams(m);               // FIFA-order team names for display
+      const flipped = FLIP_DISPLAY.has(m.match);
+      const hf = flag(t.home);
+      const af = flag(t.away);
+      // Left input = the score for the team shown on the LEFT (FIFA home).
+      // Input IDs stay tied to STORED home/away so save logic is unchanged:
+      //  - not flipped: left=pred_h, right=pred_a
+      //  - flipped:     left=pred_a (stored away), right=pred_h (stored home)
+      const leftId  = flipped ? `pred_a_${key}` : `pred_h_${key}`;
+      const rightId = flipped ? `pred_h_${key}` : `pred_a_${key}`;
       matchRows += `<div class="match-input-row">
-        <div class="mi-home">${hf}${shortName(m.home)}</div>
+        <div class="mi-home">${hf}${shortName(t.home)}</div>
         <div class="mi-scores">
           <div class="mi-date">${dateStr}</div>
           <div class="mi-inputs">
-            <input class="score-inp" type="number" min="0" max="20" id="pred_h_${key}" value="0">
+            <input class="score-inp" type="number" min="0" max="20" id="${leftId}" value="0">
             <span class="mi-sep">–</span>
-            <input class="score-inp" type="number" min="0" max="20" id="pred_a_${key}" value="0">
+            <input class="score-inp" type="number" min="0" max="20" id="${rightId}" value="0">
           </div>
         </div>
-        <div class="mi-away">${shortName(m.away)}${af}</div>
+        <div class="mi-away">${shortName(t.away)}${af}</div>
       </div>`;
     });
     container.innerHTML += `<div class="group-block">
@@ -1368,17 +1443,14 @@ function renderMatchesPanel(results) {
   const resultsMap = {};
   results.forEach(r => { resultsMap[r.match] = { h: r.home_score, a: r.away_score }; });
 
-  const now = new Date();
-  const todayStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }).replace(' ', ' ');
-
-  // Map month names to match schedule format
-  const monthMap = {
-    'Jan':'Jan','Feb':'Feb','Mar':'Mar','Apr':'Apr','May':'May','Jun':'Jun',
-    'Jul':'Jul','Aug':'Aug','Sep':'Sep','Oct':'Oct','Nov':'Nov','Dec':'Dec'
-  };
-
-  // Get today's date in "Jun 11" format
-  const todayFormatted = now.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  // "Today" in EEST (UTC+3): get the current EEST calendar date as Y-M-D
+  const nowUtc = new Date();
+  const nowEest = new Date(nowUtc.getTime() + 3 * 3600000);
+  const todayKey = `${nowEest.getUTCFullYear()}-${nowEest.getUTCMonth()}-${nowEest.getUTCDate()}`;
+  function eestDayKey(d) {
+    const e = new Date(d.getTime() + 3 * 3600000);
+    return `${e.getUTCFullYear()}-${e.getUTCMonth()}-${e.getUTCDate()}`;
+  }
 
   const todayMatches = [];
   const playedMatches = [];
@@ -1387,19 +1459,24 @@ function renderMatchesPanel(results) {
     const sched = SCHEDULE[m.match];
     if (!sched) return;
     const res = resultsMap[m.match];
+    const d = matchDate(m.match);
     if (res !== undefined) {
-      playedMatches.push({ ...m, sched, res });
-    } else if (sched.date === todayFormatted) {
-      todayMatches.push({ ...m, sched });
+      playedMatches.push({ ...m, sched, res, _d: d });
+    } else if (d && eestDayKey(d) === todayKey) {
+      todayMatches.push({ ...m, sched, _d: d });
     }
   });
+
+  // Sort today's matches by kickoff time
+  todayMatches.sort((a, b) => (a._d?.getTime() || 0) - (b._d?.getTime() || 0));
 
   // Render today's matches
   const todayEl = document.getElementById('today-matches');
   if (todayMatches.length === 0) {
-    // Find next matchday
+    // Find next matches by real date order
     const upcoming = ALL_MATCHES
-      .filter(m => SCHEDULE[m.match] && !resultsMap[m.match])
+      .filter(m => SCHEDULE[m.match] && !resultsMap[m.match] && matchDate(m.match))
+      .sort((a, b) => matchDate(a.match).getTime() - matchDate(b.match).getTime())
       .slice(0, 3);
     if (upcoming.length === 0) {
       todayEl.innerHTML = '<div class="no-matches">All matches played!</div>';
@@ -1408,12 +1485,13 @@ function renderMatchesPanel(results) {
       todayEl.innerHTML = `<div class="no-matches">No matches today — next: ${nextDate}</div>` +
         upcoming.map(m => {
           const s = SCHEDULE[m.match];
+          const t = dispTeams(m);
           return `<div class="match-card-today">
             <div class="mc-time">${s.date} · ${s.time} EEST</div>
             <div class="mc-teams">
-              <div class="mc-team-home">${flag(m.home)}<span>${m.home}</span></div>
+              <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
               <div class="mc-vs">VS</div>
-              <div class="mc-team-away"><span>${m.away}</span>${flag(m.away)}</div>
+              <div class="mc-team-away"><span>${t.away}</span>${flag(t.away)}</div>
             </div>
           </div>`;
         }).join('');
@@ -1421,28 +1499,32 @@ function renderMatchesPanel(results) {
   } else {
     todayEl.innerHTML = todayMatches.map(m => {
       const s = SCHEDULE[m.match];
+      const t = dispTeams(m);
       return `<div class="match-card-today">
         <div class="mc-time">${s.time} EEST</div>
         <div class="mc-teams">
-          <div class="mc-team-home">${flag(m.home)}<span>${m.home}</span></div>
+          <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
           <div class="mc-vs">VS</div>
-          <div class="mc-team-away"><span>${m.away}</span>${flag(m.away)}</div>
+          <div class="mc-team-away"><span>${t.away}</span>${flag(t.away)}</div>
         </div>
       </div>`;
     }).join('');
   }
 
-  // Render played matches (most recent first)
+  // Render played matches (most recent kickoff first)
   const playedEl = document.getElementById('played-matches');
   if (playedMatches.length === 0) {
     playedEl.innerHTML = '<div class="no-matches">No results yet</div>';
   } else {
-    playedEl.innerHTML = playedMatches.reverse().map(m => {
+    playedMatches.sort((a, b) => (b._d?.getTime() || 0) - (a._d?.getTime() || 0));
+    playedEl.innerHTML = playedMatches.map(m => {
+      const t = dispTeams(m);
+      const sc = dispScores(m.match, m.res.h, m.res.a);
       return `<div class="match-card-result">
         <div class="mc-teams">
-          <div class="mc-team">${flag(m.home)}<span>${m.home}</span></div>
-          <div class="mc-score">${m.res.h} – ${m.res.a}</div>
-          <div class="mc-team away"><span>${m.away}</span> ${flag(m.away)}</div>
+          <div class="mc-team">${flag(t.home)}<span>${t.home}</span></div>
+          <div class="mc-score">${sc.h} – ${sc.a}</div>
+          <div class="mc-team away"><span>${t.away}</span> ${flag(t.away)}</div>
         </div>
       </div>`;
     }).join('');
@@ -1538,15 +1620,18 @@ async function openPlayerModal(name) {
       const matches = ALL_MATCHES.filter(m => m.group === g.id);
       let rows = '';
       matches.forEach(m => {
+        const t = dispTeams(m);
         const pred = preds.find(p => p.match === m.match);
         const res = resultsMap[m.match];
-        if (!pred) { rows += `<div class="modal-match-row pending"><div class="mm-match">${m.match}</div><div class="mm-pred">—</div><div class="mm-real pending">—</div><div class="mm-real pending">no pred</div><div class="mm-pts wrong">—</div></div>`; return; }
-        const predStr = `${pred.home_score}–${pred.away_score}`;
+        if (!pred) { rows += `<div class="modal-match-row pending"><div class="mm-match">${dispMatchLabel(m)}</div><div class="mm-pred">—</div><div class="mm-real pending">—</div><div class="mm-real pending">no pred</div><div class="mm-pts wrong">—</div></div>`; return; }
+        const dp = dispScores(m.match, pred.home_score, pred.away_score);
+        const predStr = `${dp.h}–${dp.a}`;
         if (!res || res.h === null) {
-          rows += `<div class="modal-match-row pending"><div class="mm-match">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div><div class="mm-pred">${predStr}</div><div class="mm-real pending" colspan="2">not played</div><div class="mm-pts wrong">—</div></div>`;
+          rows += `<div class="modal-match-row pending"><div class="mm-match">${flag(t.home)} ${t.home} vs ${t.away} ${flag(t.away)}</div><div class="mm-pred">${predStr}</div><div class="mm-real pending" colspan="2">not played</div><div class="mm-pts wrong">—</div></div>`;
           return;
         }
-        const realStr = `${res.h}–${res.a}`;
+        const dr = dispScores(m.match, res.h, res.a);
+        const realStr = `${dr.h}–${dr.a}`;
         let cls='wrong', pts=0;
         if (pred.home_score===res.h && pred.away_score===res.a) { cls='exact'; pts=3; totalPts+=3; totalExact++; }
         else {
@@ -1555,7 +1640,7 @@ async function openPlayerModal(name) {
           if (pr===rr) { cls='correct'; pts=1; totalPts+=1; totalCorrect++; }
         }
         rows += `<div class="modal-match-row ${cls}">
-          <div class="mm-match">${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div>
+          <div class="mm-match">${flag(t.home)} ${t.home} vs ${t.away} ${flag(t.away)}</div>
           <div class="mm-pred">${predStr}</div>
           <div class="mm-real ${cls}">${realStr}</div>
           <div class="mm-pts ${cls}">${pts>0?'+'+pts:'0'}</div>
@@ -1657,19 +1742,26 @@ async function buildAdminPanel() {
     let rows = '';
     matches.forEach(m => {
       const key = m.match.replace(/[^a-zA-Z0-9]/g,'_');
+      const t = dispTeams(m);
+      const flipped = FLIP_DISPLAY.has(m.match);
       const res = resultsMap[m.match];
-      const hv = res ? res.h : '';
-      const av = res ? res.a : '';
+      // Display values oriented to FIFA order
+      const dv = res ? dispScores(m.match, res.h, res.a) : null;
+      const leftVal  = dv ? dv.h : '';
+      const rightVal = dv ? dv.a : '';
+      // Inputs tied to STORED home/away so saveAdminResult stays correct:
+      const leftId  = flipped ? `adm_a_${key}` : `adm_h_${key}`;
+      const rightId = flipped ? `adm_h_${key}` : `adm_a_${key}`;
       const isSaved = res !== undefined && res !== null;
       const btnStyle = isSaved ? 'style="background:rgba(74,222,128,0.2);border-color:rgba(74,222,128,0.5);color:#4ade80;"' : '';
       const btnText = isSaved ? 'SAVED ✓' : 'Save';
       const sched = SCHEDULE[m.match] || {};
       const schedStr = sched.date ? `<span style="font-size:10px;color:var(--gold);font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;margin-right:8px;">${sched.date} · ${sched.time}</span>` : '';
       rows += `<div class="admin-match-row">
-        <div class="am-name">${schedStr}${flag(m.home)} ${m.home} vs ${m.away} ${flag(m.away)}</div>
-        <input class="am-inp" type="number" min="0" max="20" id="adm_h_${key}" value="${hv}" placeholder="–">
+        <div class="am-name">${schedStr}${flag(t.home)} ${t.home} vs ${t.away} ${flag(t.away)}</div>
+        <input class="am-inp" type="number" min="0" max="20" id="${leftId}" value="${leftVal}" placeholder="–">
         <span class="am-sep">–</span>
-        <input class="am-inp" type="number" min="0" max="20" id="adm_a_${key}" value="${av}" placeholder="–">
+        <input class="am-inp" type="number" min="0" max="20" id="${rightId}" value="${rightVal}" placeholder="–">
         <button class="btn-save-result" ${btnStyle} onclick="saveAdminResult('${m.match.replace(/'/g,"\\'")}','${key}')">${btnText}</button>
       </div>`;
     });
