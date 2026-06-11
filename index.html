@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v42 — display FIFA order + date-sorted matches panel (no data changes) -->
+<!-- v43 — group labels on match cards (display only) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1487,7 +1487,7 @@ function renderMatchesPanel(results) {
           const s = SCHEDULE[m.match];
           const t = dispTeams(m);
           return `<div class="match-card-today">
-            <div class="mc-time">${s.date} · ${s.time} EEST</div>
+            <div class="mc-time">${s.date} · ${s.time} EEST · Group ${m.group}</div>
             <div class="mc-teams">
               <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
               <div class="mc-vs">VS</div>
@@ -1501,7 +1501,7 @@ function renderMatchesPanel(results) {
       const s = SCHEDULE[m.match];
       const t = dispTeams(m);
       return `<div class="match-card-today">
-        <div class="mc-time">${s.time} EEST</div>
+        <div class="mc-time">${s.time} EEST · Group ${m.group}</div>
         <div class="mc-teams">
           <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
           <div class="mc-vs">VS</div>
@@ -1521,6 +1521,7 @@ function renderMatchesPanel(results) {
       const t = dispTeams(m);
       const sc = dispScores(m.match, m.res.h, m.res.a);
       return `<div class="match-card-result">
+        <div class="mc-time" style="margin-bottom:4px;">Group ${m.group}</div>
         <div class="mc-teams">
           <div class="mc-team">${flag(t.home)}<span>${t.home}</span></div>
           <div class="mc-score">${sc.h} – ${sc.a}</div>
