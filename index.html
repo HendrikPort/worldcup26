@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v47 — FIX leaderboard 1000-row limit (paginate predictions) + deadline relocked -->
+<!-- v49 — stronger red marker for wrong matches -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -370,6 +370,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 .leg-green{background:var(--green);}
 .leg-yellow{background:var(--yellow);}
 .leg-grey{background:var(--text3);}
+.leg-red{background:rgba(248,113,113,0.8);}
 
 .lb-table{
   width:100%;border-collapse:collapse;
@@ -468,7 +469,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 }
 .modal-match-row.exact{background:rgba(74,222,128,0.08);}
 .modal-match-row.correct{background:rgba(250,204,21,0.08);}
-.modal-match-row.wrong{background:rgba(255,255,255,0.02);}
+.modal-match-row.wrong{background:rgba(248,113,113,0.15);border-left:4px solid rgba(248,113,113,0.9);}
 .modal-match-row.pending{background:rgba(255,255,255,0.02);}
 .mm-match{color:var(--text2);font-size:11px;}
 .mm-pred{text-align:center;font-weight:600;color:#fff;font-family:'Barlow Condensed',sans-serif;}
@@ -861,7 +862,7 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
           <div class="lb-legend">
             <div class="lb-leg-item"><div class="leg-dot leg-green"></div>Exact score (3pts)</div>
             <div class="lb-leg-item"><div class="leg-dot leg-yellow"></div>Correct result (1pt)</div>
-            <div class="lb-leg-item"><div class="leg-dot leg-grey"></div>Wrong (0pts)</div>
+            <div class="lb-leg-item"><div class="leg-dot leg-red"></div>Wrong (0pts)</div>
           </div>
           <table class="lb-table">
             <thead>
