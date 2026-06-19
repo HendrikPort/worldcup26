@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v54 — fix result card wrapping + match today card sizing -->
+<!-- v56 — scorecard matches sorted by date played within each group -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -467,8 +467,8 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
   border-radius:5px;
   font-size:12px;
 }
-.modal-match-row.exact{background:rgba(74,222,128,0.08);}
-.modal-match-row.correct{background:rgba(250,204,21,0.08);}
+.modal-match-row.exact{background:rgba(74,222,128,0.08);border-left:4px solid rgba(74,222,128,0.9);}
+.modal-match-row.correct{background:rgba(250,204,21,0.08);border-left:4px solid rgba(250,204,21,0.9);}
 .modal-match-row.wrong{background:rgba(248,113,113,0.15);border-left:4px solid rgba(248,113,113,0.9);}
 .modal-match-row.pending{background:rgba(255,255,255,0.02);}
 .mm-match{color:var(--text2);font-size:11px;}
@@ -1657,7 +1657,12 @@ async function openPlayerModal(name) {
     let bodyHtml = '';
 
     GROUPS.forEach(g => {
-      const matches = ALL_MATCHES.filter(m => m.group === g.id);
+      const matches = ALL_MATCHES.filter(m => m.group === g.id)
+        .sort((a, b) => {
+          const da = matchDate(a.match), db = matchDate(b.match);
+          if (!da || !db) return 0;
+          return da.getTime() - db.getTime();
+        });
       let rows = '';
       matches.forEach(m => {
         const t = dispTeams(m);
