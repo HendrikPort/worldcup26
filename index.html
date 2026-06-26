@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v85-LIVE — KO leaderboard shows only players who submitted KO predictions -->
+<!-- v86-LIVE — Tomorrows Matches section (group + KO fixtures), today panel KO-aware -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1009,6 +1009,8 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
         <div class="matches-panel">
           <div class="matches-section-title">Today's Matches</div>
           <div id="today-matches"><div class="no-matches">Loading...</div></div>
+          <div class="matches-section-title" style="margin-top:1.25rem;">Tomorrow's Matches</div>
+          <div id="tomorrow-matches"><div class="no-matches">Loading...</div></div>
           <div class="matches-section-title" style="margin-top:1.25rem;">Results</div>
           <div id="played-matches"><div class="no-matches">Loading...</div></div>
         </div>
@@ -1455,6 +1457,17 @@ function matchDate(matchKey) {
   if (mon === undefined) return null;
   // EEST is UTC+3 → subtract 3h to get the UTC instant of kickoff
   return new Date(Date.UTC(2026, mon, Number(dayStr), hh - 3, mm));
+}
+
+// KO match calendar day (from KO_DATES "Jun 29"). No exact time stored, so
+// we anchor to a nominal midday EEST kickoff just for today/tomorrow bucketing.
+function koMatchDate(slot) {
+  const ds = KO_DATES[slot];
+  if (!ds) return null;
+  const [monStr, dayStr] = ds.split(' ');
+  const mon = _MONTHS[monStr];
+  if (mon === undefined) return null;
+  return new Date(Date.UTC(2026, mon, Number(dayStr), 12 - 3, 0));
 }
 
 // ══════════════════════════════════════════════════════
@@ -2231,7 +2244,7 @@ function goToMyPreds() {
 // ══════════════════════════════════════════════════════
 // MATCHES PANEL
 // ══════════════════════════════════════════════════════
-function renderMatchesPanel(results) {
+function renderMatchesPanel(results, koResults = []) {
   const resultsMap = {};
   results.forEach(r => { resultsMap[r.match] = { h: r.home_score, a: r.away_score }; });
 
@@ -2239,14 +2252,18 @@ function renderMatchesPanel(results) {
   const nowUtc = new Date();
   const nowEest = new Date(nowUtc.getTime() + 3 * 3600000);
   const todayKey = `${nowEest.getUTCFullYear()}-${nowEest.getUTCMonth()}-${nowEest.getUTCDate()}`;
+  const tmrwEest = new Date(nowEest.getTime() + 24 * 3600000);
+  const tomorrowKey = `${tmrwEest.getUTCFullYear()}-${tmrwEest.getUTCMonth()}-${tmrwEest.getUTCDate()}`;
   function eestDayKey(d) {
     const e = new Date(d.getTime() + 3 * 3600000);
     return `${e.getUTCFullYear()}-${e.getUTCMonth()}-${e.getUTCDate()}`;
   }
 
   const todayMatches = [];
+  const tomorrowMatches = [];
   const playedMatches = [];
 
+  // Group-stage matches
   ALL_MATCHES.forEach(m => {
     const sched = SCHEDULE[m.match];
     if (!sched) return;
@@ -2256,14 +2273,56 @@ function renderMatchesPanel(results) {
       playedMatches.push({ ...m, sched, res, _d: d });
     } else if (d && eestDayKey(d) === todayKey) {
       todayMatches.push({ ...m, sched, _d: d });
+    } else if (d && eestDayKey(d) === tomorrowKey) {
+      tomorrowMatches.push({ ...m, sched, _d: d });
     }
   });
 
-  // Sort today's matches by kickoff time
+  // Knockout matches (from ko_results + KO_DATES). Only show ones with both
+  // teams known and not yet played, on today/tomorrow.
+  koResults.forEach(r => {
+    if (!r.home_team || !r.away_team) return;       // slot not ready
+    if (r.home_score !== null && r.home_score !== undefined) return; // already played
+    const d = koMatchDate(r.slot);
+    if (!d) return;
+    const card = { _ko: true, slot: r.slot, home: r.home_team, away: r.away_team, _d: d, dateStr: KO_DATES[r.slot] };
+    const dk = eestDayKey(d);
+    if (dk === todayKey) todayMatches.push(card);
+    else if (dk === tomorrowKey) tomorrowMatches.push(card);
+  });
+
+  // Sort by kickoff time
   todayMatches.sort((a, b) => (a._d?.getTime() || 0) - (b._d?.getTime() || 0));
+  tomorrowMatches.sort((a, b) => (a._d?.getTime() || 0) - (b._d?.getTime() || 0));
 
   // Render today's matches
   const todayEl = document.getElementById('today-matches');
+  // Shared upcoming-card renderer (handles both group and KO cards)
+  const upcomingCard = (m, withDate) => {
+    if (m._ko) {
+      const label = `${withDate ? m.dateStr + ' · ' : ''}Knockout`;
+      return `<div class="match-card-today">
+        <div class="mc-time">${label}</div>
+        <div class="mc-teams">
+          <div class="mc-team-home">${flag(m.home)}<span>${m.home}</span></div>
+          <div class="mc-vs">VS</div>
+          <div class="mc-team-away"><span>${m.away}</span>${flag(m.away)}</div>
+        </div>
+      </div>`;
+    }
+    const s = SCHEDULE[m.match];
+    const t = dispTeams(m);
+    const label = `${withDate ? s.date + ' · ' : ''}${s.time} EEST · Group ${m.group}`;
+    return `<div class="match-card-today">
+      <div class="mc-time">${label}</div>
+      <div class="mc-teams">
+        <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
+        <div class="mc-vs">VS</div>
+        <div class="mc-team-away"><span>${t.away}</span>${flag(t.away)}</div>
+      </div>
+    </div>`;
+  };
+
   if (todayMatches.length === 0) {
     // Find next matches by real date order
     const upcoming = ALL_MATCHES
@@ -2271,36 +2330,22 @@ function renderMatchesPanel(results) {
       .sort((a, b) => matchDate(a.match).getTime() - matchDate(b.match).getTime())
       .slice(0, 3);
     if (upcoming.length === 0) {
-      todayEl.innerHTML = '<div class="no-matches">All matches played!</div>';
+      todayEl.innerHTML = '<div class="no-matches">No group matches today</div>';
     } else {
       const nextDate = SCHEDULE[upcoming[0].match].date;
       todayEl.innerHTML = `<div class="no-matches">No matches today — next: ${nextDate}</div>` +
-        upcoming.map(m => {
-          const s = SCHEDULE[m.match];
-          const t = dispTeams(m);
-          return `<div class="match-card-today">
-            <div class="mc-time">${s.date} · ${s.time} EEST · Group ${m.group}</div>
-            <div class="mc-teams">
-              <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
-              <div class="mc-vs">VS</div>
-              <div class="mc-team-away"><span>${t.away}</span>${flag(t.away)}</div>
-            </div>
-          </div>`;
-        }).join('');
+        upcoming.map(m => upcomingCard(m, true)).join('');
     }
   } else {
-    todayEl.innerHTML = todayMatches.map(m => {
-      const s = SCHEDULE[m.match];
-      const t = dispTeams(m);
-      return `<div class="match-card-today">
-        <div class="mc-time">${s.time} EEST · Group ${m.group}</div>
-        <div class="mc-teams">
-          <div class="mc-team-home">${flag(t.home)}<span>${t.home}</span></div>
-          <div class="mc-vs">VS</div>
-          <div class="mc-team-away"><span>${t.away}</span>${flag(t.away)}</div>
-        </div>
-      </div>`;
-    }).join('');
+    todayEl.innerHTML = todayMatches.map(m => upcomingCard(m, false)).join('');
+  }
+
+  // Render tomorrow's matches
+  const tmrwEl = document.getElementById('tomorrow-matches');
+  if (tmrwEl) {
+    tmrwEl.innerHTML = tomorrowMatches.length === 0
+      ? '<div class="no-matches">No matches tomorrow</div>'
+      : tomorrowMatches.map(m => upcomingCard(m, false)).join('');
   }
 
   // Render played matches (most recent kickoff first)
@@ -2391,7 +2436,7 @@ async function loadLeaderboard() {
     const koScore = (name) => koScorePlayer(koPreds.filter(p => p.player === name), koResBySlot);
 
     // Update subtitle + matches panel (group context)
-    renderMatchesPanel(results);
+    renderMatchesPanel(results, koResults);
     const playedMatches = results.length;
     document.getElementById('lb-subtitle').textContent =
       lbTab === 'knockout' ? `Knockout stage — ${koResults.filter(r=>r.home_score!=null).length} matches scored`
