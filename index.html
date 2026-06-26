@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v86-LIVE — Tomorrows Matches section (group + KO fixtures), today panel KO-aware -->
+<!-- v87-LIVE — +5 champion bonus (correct final winner), shown in bracket header -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1577,7 +1577,33 @@ function koScorePlayer(preds, resultsBySlot) {
       if (pr2 === rr) { pts += 1; correct++; }
     }
   });
-  return { pts, exact, correct };
+
+  // ── Champion bonus: +5 if the player predicted the actual FINAL winner ──
+  // Triggers whenever they got the final's winner right (regardless of score).
+  let championBonus = 0;
+  const fp = preds.find(p => p.slot === 'FINAL');
+  const fr = resultsBySlot['FINAL'];
+  if (fp && fr && fr.home_team && fr.away_team &&
+      fr.home_score != null && fr.away_score != null) {
+    // Real champion: prefer the resolver-set winner (accounts for ET/pens),
+    // else derive from the decisive 90-min score.
+    let realChamp = fr.winner || null;
+    if (!realChamp && fr.home_score !== fr.away_score) {
+      realChamp = fr.home_score > fr.away_score ? fr.home_team : fr.away_team;
+    }
+    // Player's predicted champion: their higher-scored team in the FINAL.
+    // (A predicted draw = no champion pick = no bonus.)
+    let predChamp = null;
+    if (fp.home_score != null && fp.away_score != null && fp.home_score !== fp.away_score) {
+      predChamp = fp.home_score > fp.away_score ? fp.home_team : fp.away_team;
+    }
+    if (realChamp && predChamp && realChamp === predChamp) {
+      championBonus = 5;
+      pts += 5;
+    }
+  }
+
+  return { pts, exact, correct, championBonus };
 }
 
 
@@ -2593,7 +2619,7 @@ async function koOpenPlayerBracket(name) {
     const hero = document.querySelector('#view-bracket .lb-hero h2');
     const sub = document.querySelector('#view-bracket .lb-hero p');
     if (hero) hero.innerHTML = `${name}'s Bracket`;
-    if (sub) sub.textContent = `${score.pts} KO pts — ${score.exact} exact, ${score.correct} correct`;
+    if (sub) sub.textContent = `${score.pts} KO pts — ${score.exact} exact, ${score.correct} correct${score.championBonus ? ' · +5 champion 🏆' : ''}`;
     // Back button placed below the hero (clear of the header logo)
     let back = document.getElementById('ko-view-back');
     if (!back) {
