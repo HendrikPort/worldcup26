@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v87-LIVE — +5 champion bonus (correct final winner), shown in bracket header -->
+<!-- v88-LIVE — R16+ partial scoring (per-side team match), shared koScoreSlot; R32 stays strict -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1552,30 +1552,56 @@ async function koGetResults() {
 // Rule: a slot scores ONLY if the predicted teams match the real teams
 // in that slot (order-independent) AND then 3 exact / 1 correct result / 0.
 // 90-minute result only (home_score/away_score in ko_results).
+// Score a single slot prediction against the real result.
+// Returns points: 3 (exact), 1 (correct result), or 0.
+// R32: full matchup required (order-independent).
+// R16+: home/away positions fixed; partial credit if one side's team is right.
+function koScoreSlot(pr, res) {
+  if (!pr || !res) return 0;
+  if (res.home_team == null || res.away_team == null) return 0;
+  if (res.home_score == null || res.away_score == null) return 0;
+  if (pr.home_score == null || pr.away_score == null) return 0;
+
+  const realOutcome = res.home_score > res.away_score ? 'H'
+                    : res.home_score < res.away_score ? 'A' : 'D';
+
+  if (pr.slot && pr.slot.startsWith('R32-')) {
+    const predPair = [pr.home_team, pr.away_team].sort().join('|');
+    const realPair = [res.home_team, res.away_team].sort().join('|');
+    if (predPair !== realPair) return 0;
+    let phs, pas;
+    if (pr.home_team === res.home_team) { phs = pr.home_score; pas = pr.away_score; }
+    else { phs = pr.away_score; pas = pr.home_score; }
+    if (phs === res.home_score && pas === res.away_score) return 3;
+    const a = phs>pas?'H':phs<pas?'A':'D';
+    return a === realOutcome ? 1 : 0;
+  }
+
+  // R16 onward: fixed positions
+  const homeOK = pr.home_team === res.home_team;
+  const awayOK = pr.away_team === res.away_team;
+  if (!homeOK && !awayOK) return 0;
+  const predOutcome = pr.home_score > pr.away_score ? 'H'
+                    : pr.home_score < pr.away_score ? 'A' : 'D';
+
+  if (homeOK && awayOK) {
+    if (pr.home_score === res.home_score && pr.away_score === res.away_score) return 3;
+    return predOutcome === realOutcome ? 1 : 0;
+  }
+  // exactly one side correct → score that team's goals + outcome
+  const goalsMatch = homeOK ? (pr.home_score === res.home_score)
+                            : (pr.away_score === res.away_score);
+  if (goalsMatch && predOutcome === realOutcome) return 3;
+  return predOutcome === realOutcome ? 1 : 0;
+}
+
 function koScorePlayer(preds, resultsBySlot) {
   let pts = 0, exact = 0, correct = 0;
   preds.forEach(pr => {
     const res = resultsBySlot[pr.slot];
-    if (!res) return;
-    if (res.home_team == null || res.away_team == null) return;     // slot not set
-    if (res.home_score == null || res.away_score == null) return;   // not played yet
-    // Teams must match the real matchup (order-independent).
-    const predPair = [pr.home_team, pr.away_team].sort().join('|');
-    const realPair = [res.home_team, res.away_team].sort().join('|');
-    if (predPair !== realPair) return; // wrong teams → 0 (cascade)
-
-    // Align the player's scores to the real home/away orientation.
-    let phs, pas;
-    if (pr.home_team === res.home_team) { phs = pr.home_score; pas = pr.away_score; }
-    else { phs = pr.away_score; pas = pr.home_score; } // they had teams flipped
-
-    if (phs == null || pas == null) return;
-    if (phs === res.home_score && pas === res.away_score) { pts += 3; exact++; }
-    else {
-      const pr2 = phs > pas ? 'H' : phs < pas ? 'A' : 'D';
-      const rr  = res.home_score > res.away_score ? 'H' : res.home_score < res.away_score ? 'A' : 'D';
-      if (pr2 === rr) { pts += 1; correct++; }
-    }
+    const s = koScoreSlot({ ...pr }, res);
+    if (s === 3) { pts += 3; exact++; }
+    else if (s === 1) { pts += 1; correct++; }
   });
 
   // ── Champion bonus: +5 if the player predicted the actual FINAL winner ──
@@ -1898,19 +1924,13 @@ function renderBracket() {
     if (!p || !p.home_team) {
       return `<div class="${cls}">${metaHtml}<div class="ko-team tbd"><span>—</span></div><div class="ko-vs">vs</div><div class="ko-team tbd"><span>—</span></div></div>`;
     }
-    // Determine score outcome class + points
+    // Determine score outcome class + points (uses shared koScoreSlot)
     let tint = '', ptsBadge = '';
     if (res && res.home_team && res.away_team && res.home_score!=null && res.away_score!=null) {
-      const predPair=[p.home_team,p.away_team].sort().join('|');
-      const realPair=[res.home_team,res.away_team].sort().join('|');
-      if (predPair!==realPair) { tint='ko-wrong'; ptsBadge='<span class="ko-pts-badge zero">0</span>'; }
-      else {
-        let phs,pas;
-        if (p.home_team===res.home_team){phs=p.home_score;pas=p.away_score;}
-        else {phs=p.away_score;pas=p.home_score;}
-        if (phs===res.home_score && pas===res.away_score){tint='ko-exact';ptsBadge='<span class="ko-pts-badge three">+3</span>';}
-        else { const a=phs>pas?'H':phs<pas?'A':'D';const b=res.home_score>res.away_score?'H':res.home_score<res.away_score?'A':'D'; if(a===b){tint='ko-correct';ptsBadge='<span class="ko-pts-badge one">+1</span>';}else{tint='ko-wrong';ptsBadge='<span class="ko-pts-badge zero">0</span>';} }
-      }
+      const s = koScoreSlot({ ...p, slot: id }, res);
+      if (s === 3) { tint='ko-exact'; ptsBadge='<span class="ko-pts-badge three">+3</span>'; }
+      else if (s === 1) { tint='ko-correct'; ptsBadge='<span class="ko-pts-badge one">+1</span>'; }
+      else { tint='ko-wrong'; ptsBadge='<span class="ko-pts-badge zero">0</span>'; }
     }
     const side = (team, score) => `<div class="ko-team"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${score}</span></div>`;
     return `<div class="${cls} ${tint}">${metaHtml}${ptsBadge}
