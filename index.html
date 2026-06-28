@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v95-LIVE — KO countdown timer: counts to close (21:00) while open, to open before -->
+<!-- v96-LIVE — KO close 21:45 EEST -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1112,7 +1112,7 @@ const DEADLINE     = new Date('2026-06-10T23:59:59');
 // Knockout prediction window (viewer local time, like DEADLINE).
 // Bracket is viewable anytime; SUBMIT is only enabled inside this window.
 const KO_OPEN      = new Date('2026-06-28T05:00:00Z'); // 08:00 EEST (UTC+3)
-const KO_CLOSE     = new Date('2026-06-28T18:00:00Z'); // 21:00 EEST (UTC+3)
+const KO_CLOSE     = new Date('2026-06-28T18:45:00Z'); // 21:45 EEST (UTC+3)
 function koWindowState() {
   const now = new Date();
   if (now < KO_OPEN)  return 'before';
