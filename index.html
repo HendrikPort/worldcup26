@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v90-LIVE — final draw toggle says "Who wins the cup?", 3rd says "Who takes 3rd?" -->
+<!-- v92-LIVE — viewed bracket shows prominent "World Cup 26 Winner" champion pick (bigger flag/name) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -921,7 +921,8 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
       <div class="error-msg" id="error-msg"></div>
       <button class="btn-start" id="btn-start">START PREDICTING →</button>
       <div class="welcome-rules">
-        <strong>Scoring:</strong> Exact score = 3 pts &bull; Correct result = 1 pt &bull; Wrong = 0 pts
+        <strong>Scoring:</strong> Exact score = 3 pts &bull; Correct result = 1 pt &bull; Wrong = 0 pts &bull; Correct champion = +5 pts<br>
+        <span style="opacity:0.75;font-size:0.85em;">From Round of 16 on, you score a match if at least one of your teams is in it (on the correct side).</span>
       </div>
       <div style="margin-top:1rem;text-align:center;">
         <button class="nav-btn" onclick="showView('leaderboard')" style="margin:0 auto;">View Leaderboard →</button>
@@ -1688,7 +1689,7 @@ function updateCountdown() {
     isDeadlinePassed = true;
     document.getElementById('countdown-wrap').style.display = 'none';
     const db = document.getElementById('deadline-banner'); if (db) db.style.display = 'block';
-    document.getElementById('btn-start').textContent = 'VIEW BRACKET →';
+    document.getElementById('btn-start').textContent = 'ENTER BRACKET →';
     document.getElementById('btn-start').onclick = () => showView('bracket');
     return;
   }
@@ -2345,9 +2346,12 @@ function renderMatchesPanel(results, koResults = []) {
   koResults.forEach(r => {
     if (!r.home_team || !r.away_team) return;       // slot not ready
     if (r.home_score !== null && r.home_score !== undefined) return; // already played
-    const d = koMatchDate(r.slot);
-    if (!d) return;
-    const card = { _ko: true, slot: r.slot, home: r.home_team, away: r.away_team, _d: d, dateStr: KO_DATES[r.slot] };
+    // Prefer the real kickoff time from the API (resolver-captured); fall back
+    // to the day-anchored date if not available yet.
+    const d = r.kickoff ? new Date(r.kickoff) : koMatchDate(r.slot);
+    if (!d || isNaN(d.getTime())) return;
+    const card = { _ko: true, slot: r.slot, home: r.home_team, away: r.away_team,
+                   _d: d, dateStr: KO_DATES[r.slot], kickoff: r.kickoff || null };
     const dk = eestDayKey(d);
     if (dk === todayKey) todayMatches.push(card);
     else if (dk === tomorrowKey) tomorrowMatches.push(card);
@@ -2362,7 +2366,15 @@ function renderMatchesPanel(results, koResults = []) {
   // Shared upcoming-card renderer (handles both group and KO cards)
   const upcomingCard = (m, withDate) => {
     if (m._ko) {
-      const label = `${withDate ? m.dateStr + ' · ' : ''}Knockout`;
+      // Show real kickoff time (EEST) when we have it; else just the round label.
+      let timeStr = '';
+      if (m.kickoff) {
+        const e = new Date(new Date(m.kickoff).getTime() + 3 * 3600000); // → EEST
+        const hh = String(e.getUTCHours()).padStart(2, '0');
+        const mm = String(e.getUTCMinutes()).padStart(2, '0');
+        timeStr = `${hh}:${mm} EEST · `;
+      }
+      const label = `${withDate ? m.dateStr + ' · ' : ''}${timeStr}Knockout`;
       return `<div class="match-card-today">
         <div class="mc-time">${label}</div>
         <div class="mc-teams">
@@ -2656,6 +2668,35 @@ async function koOpenPlayerBracket(name) {
     const sub = document.querySelector('#view-bracket .lb-hero p');
     if (hero) hero.innerHTML = `${name}'s Bracket`;
     if (sub) sub.textContent = `${score.pts} KO pts — ${score.exact} exact, ${score.correct} correct${score.championBonus ? ' · +5 champion 🏆' : ''}`;
+
+    // Prominent champion pick (winner of their FINAL; uses advancer on a draw)
+    const fp = predBySlot['FINAL'];
+    let champ = null;
+    if (fp && fp.home_score != null && fp.away_score != null) {
+      if (fp.home_score > fp.away_score) champ = fp.home_team;
+      else if (fp.away_score > fp.home_score) champ = fp.away_team;
+      else champ = fp.advance || null;
+    }
+    let champEl = document.getElementById('ko-champ-pick');
+    if (!champEl) {
+      champEl = document.createElement('div');
+      champEl.id = 'ko-champ-pick';
+      const heroBox = document.querySelector('#view-bracket .lb-hero');
+      if (heroBox) heroBox.appendChild(champEl);
+    }
+    if (champ) {
+      champEl.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:0.6rem;margin:0.6rem auto 0;font-family:\'Barlow Condensed\',sans-serif;text-transform:uppercase;letter-spacing:0.05em;';
+      champEl.innerHTML =
+        `<span style="font-size:0.95rem;color:var(--gold);font-weight:600;">🏆 World Cup 26 Winner:</span>` +
+        `<span style="display:inline-flex;align-items:center;gap:0.5rem;font-size:1.5rem;font-weight:800;color:#fff;">` +
+        `${flag(champ)}<span>${champ}</span></span>`;
+      // make the champion's flag a touch bigger than normal
+      const img = champEl.querySelector('img');
+      if (img) { img.style.width = '34px'; img.style.height = 'auto'; }
+      champEl.style.display = 'flex';
+    } else {
+      champEl.style.display = 'none';
+    }
     // Back button placed below the hero (clear of the header logo)
     let back = document.getElementById('ko-view-back');
     if (!back) {
@@ -2683,6 +2724,8 @@ function koExitPlayerBracket() {
   koState = {};
   const back = document.getElementById('ko-view-back');
   if (back) back.style.display = 'none';
+  const champEl = document.getElementById('ko-champ-pick');
+  if (champEl) champEl.style.display = 'none';
   // restore bracket hero text
   const hero = document.querySelector('#view-bracket .lb-hero h2');
   const sub = document.querySelector('#view-bracket .lb-hero p');
