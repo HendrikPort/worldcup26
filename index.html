@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v88-LIVE — R16+ partial scoring (per-side team match), shared koScoreSlot; R32 stays strict -->
+<!-- v90-LIVE — final draw toggle says "Who wins the cup?", 3rd says "Who takes 3rd?" -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1617,11 +1617,13 @@ function koScorePlayer(preds, resultsBySlot) {
     if (!realChamp && fr.home_score !== fr.away_score) {
       realChamp = fr.home_score > fr.away_score ? fr.home_team : fr.away_team;
     }
-    // Player's predicted champion: their higher-scored team in the FINAL.
-    // (A predicted draw = no champion pick = no bonus.)
+    // Player's predicted champion: their higher-scored team in the FINAL,
+    // or their explicit advancer pick if they predicted a draw.
     let predChamp = null;
-    if (fp.home_score != null && fp.away_score != null && fp.home_score !== fp.away_score) {
-      predChamp = fp.home_score > fp.away_score ? fp.home_team : fp.away_team;
+    if (fp.home_score != null && fp.away_score != null) {
+      if (fp.home_score > fp.away_score) predChamp = fp.home_team;
+      else if (fp.away_score > fp.home_score) predChamp = fp.away_team;
+      else predChamp = fp.advance || null; // draw → their picked advancer
     }
     if (realChamp && predChamp && realChamp === predChamp) {
       championBonus = 5;
@@ -1932,7 +1934,17 @@ function renderBracket() {
       else if (s === 1) { tint='ko-correct'; ptsBadge='<span class="ko-pts-badge one">+1</span>'; }
       else { tint='ko-wrong'; ptsBadge='<span class="ko-pts-badge zero">0</span>'; }
     }
-    const side = (team, score) => `<div class="ko-team"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${score}</span></div>`;
+    // Determine who the player predicted to advance from this match.
+    let predAdv = null;
+    if (p.home_score != null && p.away_score != null) {
+      if (p.home_score > p.away_score) predAdv = p.home_team;
+      else if (p.away_score > p.home_score) predAdv = p.away_team;
+      else predAdv = p.advance || null; // draw → explicit pick
+    }
+    const side = (team, score) => {
+      const advCls = (predAdv && predAdv === team) ? ' advanced' : '';
+      return `<div class="ko-team${advCls}"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${score}</span></div>`;
+    };
     return `<div class="${cls} ${tint}">${metaHtml}${ptsBadge}
       ${side(p.home_team, p.home_score)}
       <div class="ko-vs">vs</div>
@@ -1973,8 +1985,11 @@ function renderBracket() {
     if (bothKnown && isDraw) {
       const selH = st.advance === st.home ? ' sel' : '';
       const selA = st.advance === st.away ? ' sel' : '';
+      const tbLabel = id === 'FINAL' ? 'Who wins the cup? 🏆'
+                    : id === '3RD' ? 'Who takes 3rd?'
+                    : 'Who advances?';
       tb = `<div class="ko-tiebreak">
-        <div class="ko-tiebreak-label">Who advances?</div>
+        <div class="ko-tiebreak-label">${tbLabel}</div>
         <div class="ko-tb-btns">
           <button class="ko-tb-btn${selH}" data-tb="${id}" data-team="${st.home}">${st.home}</button>
           <button class="ko-tb-btn${selA}" data-tb="${id}" data-team="${st.away}">${st.away}</button>
@@ -2078,7 +2093,8 @@ function koBuildRows(playerName) {
       home_team: st.home,
       away_team: st.away,
       home_score: st.hs,
-      away_score: st.as
+      away_score: st.as,
+      advance: st.advance || null   // who they picked to advance on a draw
     };
   });
 }
