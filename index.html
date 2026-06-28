@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v92-LIVE — viewed bracket shows prominent "World Cup 26 Winner" champion pick (bigger flag/name) -->
+<!-- v93-LIVE — admin-only KO participation checker (group roster vs KO submissions, Done/Missing) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -984,6 +984,9 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
         <button class="lb-tab active" id="lbtab-overall" onclick="setLbTab('overall')">Overall</button>
         <button class="lb-tab" id="lbtab-group" onclick="setLbTab('group')">Group Stage</button>
         <button class="lb-tab" id="lbtab-ko" onclick="setLbTab('knockout')">Knockout</button>
+      </div>
+      <div id="admin-ko-check-wrap" style="display:none;text-align:center;margin:-0.5rem auto 1rem;">
+        <button class="nav-btn" onclick="showKoParticipation()" style="margin:0 auto;">🔎 KO participation (admin)</button>
       </div>
       <div class="lb-layout">
         <!-- RIGHT: Leaderboard (shown first on mobile) -->
@@ -2459,6 +2462,47 @@ function setLbTab(which) {
   loadLeaderboard();
 }
 
+// Admin-only: compare group-stage roster vs KO submissions
+async function showKoParticipation() {
+  const titleEl = document.getElementById('modal-player-name');
+  const ptsEl = document.getElementById('modal-player-pts');
+  const bodyEl = document.getElementById('modal-body');
+  const modal = document.getElementById('player-modal');
+  if (titleEl) titleEl.textContent = 'KO Participation';
+  if (ptsEl) ptsEl.textContent = '';
+  if (bodyEl) bodyEl.innerHTML = '<div class="no-results"><span class="spinner"></span> Loading…</div>';
+  if (modal) modal.classList.add('open');
+
+  try {
+    const [players, koPreds] = await Promise.all([
+      sbFetch('players?select=name'),
+      koGetAllPreds(),
+    ]);
+    const koSet = new Set((koPreds || []).map(p => p.player));
+    const rows = (players || [])
+      .map(p => ({ name: p.name, done: koSet.has(p.name) }))
+      .sort((a, b) => (a.done === b.done) ? a.name.localeCompare(b.name) : (a.done ? 1 : -1));
+    const doneCount = rows.filter(r => r.done).length;
+    const missCount = rows.length - doneCount;
+
+    let html = `<div style="margin-bottom:0.75rem;font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;color:var(--text2);">
+      <strong style="color:var(--green);">${doneCount} done</strong> ·
+      <strong style="color:var(--red);">${missCount} missing</strong> ·
+      ${rows.length} total</div>`;
+    html += `<div style="display:flex;flex-direction:column;gap:2px;">`;
+    rows.forEach(r => {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:6px;background:${r.done ? 'rgba(74,222,128,0.08)' : 'rgba(248,113,113,0.10)'};">
+        <span>${r.name}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;font-size:0.8rem;color:${r.done ? 'var(--green)' : 'var(--red)'};">${r.done ? '✓ Done' : '✗ Missing'}</span>
+      </div>`;
+    });
+    html += `</div>`;
+    if (bodyEl) bodyEl.innerHTML = html;
+  } catch (e) {
+    if (bodyEl) bodyEl.innerHTML = `<div class="no-results" style="color:var(--red)">Error loading participation.</div>`;
+  }
+}
+
 async function loadLeaderboard() {
   const tbody = document.getElementById('lb-tbody');
   tbody.innerHTML = `<tr><td colspan="5" class="no-results"><span class="spinner"></span> Loading…</td></tr>`;
@@ -2472,6 +2516,9 @@ async function loadLeaderboard() {
   // "Bracket" nav only makes sense once a name is entered (or admin)
   const navB = document.getElementById('lb-nav-bracket');
   if (navB) navB.style.display = (currentPlayer || isAdminMode) ? 'inline-block' : 'none';
+  // Admin-only KO participation checker
+  const akc = document.getElementById('admin-ko-check-wrap');
+  if (akc) akc.style.display = isAdminMode ? 'block' : 'none';
 
   try {
     // Players list — needed for all tabs.
