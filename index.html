@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v94-LIVE — KO window pinned to EEST: open 08:00, close 21:00 (was 19:00 viewer-local) -->
+<!-- v95-LIVE — KO countdown timer: counts to close (21:00) while open, to open before -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -908,6 +908,7 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
 <div id="view-welcome" class="view active">
   <div class="welcome-overlay"></div>
   <div class="welcome-content">
+    <div class="countdown-label" id="countdown-label" style="display:none;text-align:center;font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);font-weight:600;margin-bottom:0.4rem;"></div>
     <div class="countdown-wrap" id="countdown-wrap">
       <div class="cd-block"><div class="cd-num" id="cd-days">--</div><div class="cd-label">Days</div></div>
       <div class="cd-block"><div class="cd-num" id="cd-hours">--</div><div class="cd-label">Hours</div></div>
@@ -1685,25 +1686,51 @@ async function saveResult(match, homeScore, awayScore) {
 // ══════════════════════════════════════════════════════
 // COUNTDOWN
 // ══════════════════════════════════════════════════════
-function updateCountdown() {
-  const now = new Date();
-  const diff = DEADLINE - now;
-  if (diff <= 0) {
-    isDeadlinePassed = true;
-    document.getElementById('countdown-wrap').style.display = 'none';
-    const db = document.getElementById('deadline-banner'); if (db) db.style.display = 'block';
-    document.getElementById('btn-start').textContent = 'ENTER BRACKET →';
-    document.getElementById('btn-start').onclick = () => showView('bracket');
-    return;
-  }
+function renderCountdown(target, labelText) {
+  const wrap = document.getElementById('countdown-wrap');
+  const lab = document.getElementById('countdown-label');
+  const diff = target - new Date();
+  if (diff <= 0) return false;
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
-  document.getElementById('cd-days').textContent = d;
-  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
-  document.getElementById('cd-mins').textContent = String(m).padStart(2,'0');
-  document.getElementById('cd-secs').textContent = String(s).padStart(2,'0');
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('cd-days', d);
+  set('cd-hours', String(h).padStart(2,'0'));
+  set('cd-mins', String(m).padStart(2,'0'));
+  set('cd-secs', String(s).padStart(2,'0'));
+  if (wrap) wrap.style.display = 'flex';
+  if (lab) { lab.textContent = labelText; lab.style.display = labelText ? 'block' : 'none'; }
+  return true;
+}
+
+function updateCountdown() {
+  const now = new Date();
+
+  // Group-stage deadline phase
+  if (now < DEADLINE) {
+    renderCountdown(DEADLINE, '');
+    return;
+  }
+  // Group deadline passed → enter KO phase behaviour
+  isDeadlinePassed = true;
+  const db = document.getElementById('deadline-banner'); if (db) db.style.display = 'block';
+  const btn = document.getElementById('btn-start');
+  if (btn) { btn.textContent = 'ENTER BRACKET →'; btn.onclick = () => showView('bracket'); }
+
+  const ws = koWindowState();
+  if (ws === 'open') {
+    // Window open → live countdown to close (21:00 EEST)
+    renderCountdown(KO_CLOSE, 'Predictions close in');
+  } else if (ws === 'before') {
+    // Not open yet → countdown to open (08:00 EEST)
+    renderCountdown(KO_OPEN, 'Predictions open in');
+  } else {
+    // Closed → hide timer
+    const wrap = document.getElementById('countdown-wrap'); if (wrap) wrap.style.display = 'none';
+    const lab = document.getElementById('countdown-label'); if (lab) lab.style.display = 'none';
+  }
 }
 
 // ══════════════════════════════════════════════════════
