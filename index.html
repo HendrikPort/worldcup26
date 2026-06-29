@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v103-LIVE — removed redundant Bracket button from header (green View Bracket covers it) -->
+<!-- v105-LIVE — actual-result text brighter/bolder for readability -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -911,6 +911,7 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
 .ko-match.ko-correct{border-color:var(--yellow);background:rgba(250,204,21,0.12);}
 .ko-match.ko-wrong{border-color:var(--red);background:rgba(248,113,113,0.10);}
 .ko-score-static{font-size:14px;font-weight:700;color:var(--text);min-width:18px;text-align:center;flex-shrink:0;}
+.ko-actual{margin-top:6px;padding-top:5px;border-top:1px dashed var(--border2);font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.04em;color:var(--text);font-weight:600;text-transform:uppercase;text-align:center;}
 .ko-pts-badge{position:absolute;top:4px;right:4px;font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px;z-index:3;line-height:1.4;}
 .ko-pts-badge.three{background:var(--green);color:#07140c;}
 .ko-pts-badge.one{background:var(--yellow);color:#1a1205;}
@@ -2060,10 +2061,17 @@ function renderBracket() {
       const advCls = (predAdv && predAdv === team) ? ' advanced' : '';
       return `<div class="ko-team${advCls}"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${score}</span></div>`;
     };
+    // Real 90-min result line — only for finished matches
+    let actualLine = '';
+    if (res && res.home_team && res.away_team &&
+        res.home_score != null && res.away_score != null) {
+      actualLine = `<div class="ko-actual">Actual: ${res.home_team} ${res.home_score}–${res.away_score} ${res.away_team}</div>`;
+    }
     return `<div class="${cls} ${tint}">${metaHtml}${ptsBadge}
       ${side(p.home_team, p.home_score)}
       <div class="ko-vs">vs</div>
       ${side(p.away_team, p.away_score)}
+      ${actualLine}
     </div>`;
   };
 
