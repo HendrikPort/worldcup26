@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v96-LIVE — KO close 21:45 EEST -->
+<!-- v97-LIVE — champion banner on FINAL card (view mode); submit button auto-locks at close even when idle -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -844,6 +844,10 @@ body.has-ko-bar .admin-trigger{bottom:4.5rem;}
 .ko-vs{font-size:9px;color:var(--text3);text-align:center;margin:2px 0;letter-spacing:0.1em;}
 .ko-final-match{border-color:var(--gold);background:rgba(232,200,74,0.1);box-shadow:0 0 16px rgba(232,200,74,0.25);}
 .ko-final-label{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold);text-align:center;margin-bottom:8px;}
+.ko-champ-banner{text-align:center;margin-bottom:14px;padding:10px 14px;border:1px solid var(--gold);border-radius:10px;background:rgba(232,200,74,0.12);box-shadow:0 0 16px rgba(232,200,74,0.2);}
+.ko-champ-label{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.08em;font-size:12px;color:var(--gold);font-weight:600;margin-bottom:5px;}
+.ko-champ-team{display:flex;align-items:center;justify-content:center;gap:9px;font-size:24px;font-weight:800;color:#fff;font-family:'Bebas Neue',sans-serif;letter-spacing:0.04em;}
+.ko-champ-team img{width:38px;height:auto;border-radius:3px;box-shadow:0 0 0 2px var(--gold);}
 .ko-third-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.12em;color:var(--text2);text-transform:uppercase;text-align:center;margin:18px 0 8px;font-weight:600;}
 /* ── Connector lines ── */
 /* horizontal stub out of each card toward next round */
@@ -1731,6 +1735,14 @@ function updateCountdown() {
     const wrap = document.getElementById('countdown-wrap'); if (wrap) wrap.style.display = 'none';
     const lab = document.getElementById('countdown-label'); if (lab) lab.style.display = 'none';
   }
+
+  // Keep the submit button's enabled/disabled state in sync with the window
+  // (so it locks at close time even if the user is idle on the bracket page).
+  if (typeof koUpdateSummary === 'function' &&
+      document.getElementById('view-bracket') &&
+      document.getElementById('view-bracket').classList.contains('active')) {
+    koUpdateSummary();
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -2057,7 +2069,26 @@ function renderBracket() {
     + roundCol('Semi-finals', ['SF-2'], { toFinal:true })
     + '</div>';
 
+  // Champion pick banner (only when viewing a submitted bracket)
+  let champBanner = '';
+  if (koViewMode) {
+    const fp = (koViewMode.predBySlot && koViewMode.predBySlot['FINAL']) || null;
+    let champ = null;
+    if (fp && fp.home_score != null && fp.away_score != null) {
+      if (fp.home_score > fp.away_score) champ = fp.home_team;
+      else if (fp.away_score > fp.home_score) champ = fp.away_team;
+      else champ = fp.advance || null;
+    }
+    if (champ) {
+      champBanner = `<div class="ko-champ-banner">`
+        + `<div class="ko-champ-label">🏆 World Cup 26 Winner</div>`
+        + `<div class="ko-champ-team">${flag(champ)}<span>${champ}</span></div>`
+        + `</div>`;
+    }
+  }
+
   const centerHtml = '<div class="ko-center">'
+    + champBanner
     + '<div class="ko-final-label">🏆 FINAL</div>'
     + predCard('FINAL', '')
     + '<div class="ko-third-label">3rd Place Play-off</div>'
@@ -2743,34 +2774,6 @@ async function koOpenPlayerBracket(name) {
     if (hero) hero.innerHTML = `${name}'s Bracket`;
     if (sub) sub.textContent = `${score.pts} KO pts — ${score.exact} exact, ${score.correct} correct${score.championBonus ? ' · +5 champion 🏆' : ''}`;
 
-    // Prominent champion pick (winner of their FINAL; uses advancer on a draw)
-    const fp = predBySlot['FINAL'];
-    let champ = null;
-    if (fp && fp.home_score != null && fp.away_score != null) {
-      if (fp.home_score > fp.away_score) champ = fp.home_team;
-      else if (fp.away_score > fp.home_score) champ = fp.away_team;
-      else champ = fp.advance || null;
-    }
-    let champEl = document.getElementById('ko-champ-pick');
-    if (!champEl) {
-      champEl = document.createElement('div');
-      champEl.id = 'ko-champ-pick';
-      const heroBox = document.querySelector('#view-bracket .lb-hero');
-      if (heroBox) heroBox.appendChild(champEl);
-    }
-    if (champ) {
-      champEl.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:0.6rem;margin:0.6rem auto 0;font-family:\'Barlow Condensed\',sans-serif;text-transform:uppercase;letter-spacing:0.05em;';
-      champEl.innerHTML =
-        `<span style="font-size:0.95rem;color:var(--gold);font-weight:600;">🏆 World Cup 26 Winner:</span>` +
-        `<span style="display:inline-flex;align-items:center;gap:0.5rem;font-size:1.5rem;font-weight:800;color:#fff;">` +
-        `${flag(champ)}<span>${champ}</span></span>`;
-      // make the champion's flag a touch bigger than normal
-      const img = champEl.querySelector('img');
-      if (img) { img.style.width = '34px'; img.style.height = 'auto'; }
-      champEl.style.display = 'flex';
-    } else {
-      champEl.style.display = 'none';
-    }
     // Back button placed below the hero (clear of the header logo)
     let back = document.getElementById('ko-view-back');
     if (!back) {
