@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v97-LIVE — champion banner on FINAL card (view mode); submit button auto-locks at close even when idle -->
+<!-- v102-LIVE — stats panel moved to LEFT column; leaderboard center; matches right -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -365,6 +365,13 @@ body{font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;overflow
 .lb-tabs{display:flex;gap:8px;justify-content:center;margin:0 auto 1.25rem;max-width:400px;}
 .lb-tab{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border2);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;padding:9px 6px;border-radius:8px;cursor:pointer;transition:all 0.15s;}
 .lb-tab.active{background:var(--gold);border-color:var(--gold);color:#1a1205;font-weight:700;}
+.lb-tab-bracket{background:var(--green);border-color:var(--green);color:#0a2012;font-weight:700;}
+.lb-tab-bracket:hover{opacity:0.9;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.04);margin-bottom:3px;font-size:13px;}
+.stat-team{display:flex;align-items:center;gap:7px;color:var(--text);}
+.stat-team img{width:22px;height:auto;border-radius:2px;}
+.stat-rank{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#1a1205;font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
+.stat-count{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);letter-spacing:0.03em;}
 
 .lb-wrap{max-width:900px;margin:0 auto;padding:0 1.5rem;}
 
@@ -643,13 +650,14 @@ body.has-ko-bar .admin-trigger{bottom:4.5rem;}
 ══════════════════════════════ */
 .lb-layout {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 300px 1fr 320px;
   gap: 1.5rem;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 1.5rem;
   align-items: start;
 }
+.stats-panel { position: sticky; top: 1rem; }
 .matches-panel {
   position: sticky;
   top: 70px;
@@ -784,6 +792,10 @@ body.has-ko-bar .admin-trigger{bottom:4.5rem;}
     grid-template-columns: 1fr !important;
     padding: 0 0.75rem;
   }
+  /* On mobile: leaderboard first, then stats, then matches */
+  .lb-layout > .stats-panel { order: 2; position: static; }
+  .lb-layout > div:not(.matches-panel):not(.stats-panel) { order: 1; }
+  .lb-layout > .matches-panel { order: 3; }
 
   /* Matches panel full width */
   .matches-panel {
@@ -986,6 +998,7 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
         <p id="lb-subtitle">Predictions open — leaderboard updates as matches are played</p>
       </div>
       <div class="lb-tabs">
+        <button class="lb-tab lb-tab-bracket" id="lbtab-bracket" onclick="showView('bracket')">🏆 View Bracket</button>
         <button class="lb-tab active" id="lbtab-overall" onclick="setLbTab('overall')">Overall</button>
         <button class="lb-tab" id="lbtab-group" onclick="setLbTab('group')">Group Stage</button>
         <button class="lb-tab" id="lbtab-ko" onclick="setLbTab('knockout')">Knockout</button>
@@ -994,7 +1007,16 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
         <button class="nav-btn" onclick="showKoParticipation()" style="margin:0 auto;">🔎 KO participation (admin)</button>
       </div>
       <div class="lb-layout">
-        <!-- RIGHT: Leaderboard (shown first on mobile) -->
+        <!-- LEFT: Stats panel -->
+        <div class="stats-panel matches-panel">
+          <div class="matches-section-title">🏆 Top 5 Champion Picks</div>
+          <div id="stat-champions"><div class="no-matches">—</div></div>
+          <div class="matches-section-title" style="margin-top:1.25rem;">🎯 Top 3 — Exact Scores</div>
+          <div id="stat-exact"><div class="no-matches">—</div></div>
+          <div class="matches-section-title" style="margin-top:1.25rem;">✓ Top 3 — Correct Results</div>
+          <div id="stat-correct"><div class="no-matches">—</div></div>
+        </div>
+        <!-- CENTER: Leaderboard -->
         <div>
           <div class="lb-legend">
             <div class="lb-leg-item"><div class="leg-dot leg-green"></div>Exact score (3pts)</div>
@@ -1014,7 +1036,7 @@ body.show-ko-submit .ko-pred-summary{display:flex;}
             <tbody id="lb-tbody"></tbody>
           </table>
         </div>
-        <!-- LEFT: Matches Panel (shown below on mobile) -->
+        <!-- RIGHT: Matches Panel (shown below on mobile) -->
         <div class="matches-panel">
           <div class="matches-section-title">Today's Matches</div>
           <div id="today-matches"><div class="no-matches">Loading...</div></div>
@@ -1721,9 +1743,18 @@ function updateCountdown() {
   isDeadlinePassed = true;
   const db = document.getElementById('deadline-banner'); if (db) db.style.display = 'block';
   const btn = document.getElementById('btn-start');
-  if (btn) { btn.textContent = 'ENTER BRACKET →'; btn.onclick = () => showView('bracket'); }
-
   const ws = koWindowState();
+  if (btn) {
+    btn.textContent = ws === 'closed' ? 'VIEW BRACKET →' : 'ENTER BRACKET →';
+    btn.onclick = () => showView('bracket');
+  }
+  const wlcP = document.querySelector('#view-welcome .welcome-card > p');
+  if (wlcP) {
+    wlcP.textContent = ws === 'closed'
+      ? 'Predictions are closed. View the live knockout bracket below.'
+      : 'Enter your name to predict the knockout bracket. Only players from the group stage can enter.';
+  }
+
   if (ws === 'open') {
     // Window open → live countdown to close (21:00 EEST)
     renderCountdown(KO_CLOSE, 'Predictions close in');
@@ -1743,6 +1774,18 @@ function updateCountdown() {
       document.getElementById('view-bracket').classList.contains('active')) {
     koUpdateSummary();
   }
+
+  // While viewing the live results bracket, refresh from ko_results every 30s
+  // so newly-finished matches appear without a manual reload.
+  if (koResultsMode &&
+      document.getElementById('view-bracket') &&
+      document.getElementById('view-bracket').classList.contains('active')) {
+    koResultsTick = (koResultsTick || 0) + 1;
+    if (koResultsTick >= 30) {
+      koResultsTick = 0;
+      koShowResultsBracket();
+    }
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1751,7 +1794,8 @@ function updateCountdown() {
 function showView(name) {
   // Gate the editable bracket: must have entered a valid name first.
   // Admin mode and read-only player view are exempt.
-  if (name === 'bracket' && !koViewMode && !isAdminMode && !currentPlayer) {
+  if (name === 'bracket' && !koViewMode && !isAdminMode && !currentPlayer
+      && koWindowState() !== 'closed') {
     showView('welcome');
     showToast('Enter your name first to make predictions', false);
     return;
@@ -1768,11 +1812,14 @@ function showView(name) {
   target.classList.add('active');
   // The fixed KO summary bar only exists on the bracket view
   document.body.classList.toggle('has-ko-bar', name === 'bracket');
-  // Submit bar shows only in the editable bracket (not in read-only player view)
-  document.body.classList.toggle('show-ko-submit', name === 'bracket' && !koViewMode);
-  // Leaving the bracket entirely exits any player-view mode
+  // Submit bar shows only in the EDITABLE bracket (window open, not player-view,
+  // not results-mode).
+  const koClosedNow = koWindowState() === 'closed';
+  document.body.classList.toggle('show-ko-submit', name === 'bracket' && !koViewMode && !koClosedNow);
+  // Leaving the bracket entirely exits any player-view / results mode
   if (name !== 'bracket') {
     koViewMode = null;
+    koResultsMode = null;
     const back = document.getElementById('ko-view-back');
     if (back) back.style.display = 'none';
   }
@@ -1783,10 +1830,14 @@ function showView(name) {
   if (name === 'leaderboard') loadLeaderboard();
   if (name === 'bracket') {
     if (koViewMode) {
-      // Read-only player view: render directly, don't reload editable teams
+      // Read-only player view: render directly
       renderBracket();
+    } else if (koClosedNow && !isAdminMode) {
+      // Window closed → show the REAL results bracket, read-only & live.
+      koShowResultsBracket();
     } else {
-      // Always reload the resolved/overridden teams fresh from ko_results.
+      // Window open (or admin) → editable bracket from resolved teams.
+      koResultsMode = null;
       koLoadResultsTeams().then(() => { koState = {}; renderBracket(); });
     }
   }
@@ -1809,6 +1860,9 @@ let koState = {};
 // When set, the bracket renders read-only as this player's scored picks.
 // { name, predBySlot, resBySlot }
 let koViewMode = null;
+// When set (object {resBySlot}), bracket renders REAL results read-only.
+let koResultsMode = null;
+let koResultsTick = 0;
 const KO_R32_IDS = ['R32-1','R32-2','R32-3','R32-4','R32-5','R32-6','R32-7','R32-8','R32-9','R32-10','R32-11','R32-12','R32-13','R32-14','R32-15','R32-16'];
 
 function koSeedTeams() {
@@ -1950,8 +2004,27 @@ function koResolveDownstream() {
   });
 }
 
+// Show the REAL tournament bracket (read-only, live) — used after the
+// prediction window closes so everyone can watch who advances.
+async function koShowResultsBracket() {
+  koViewMode = null;
+  try {
+    const results = await koGetResults();
+    const resBySlot = {};
+    (results || []).forEach(r => { resBySlot[r.slot] = r; });
+    koResultsMode = { resBySlot };
+  } catch (e) {
+    koResultsMode = { resBySlot: {} };
+  }
+  const hero = document.querySelector('#view-bracket .lb-hero h2');
+  const sub = document.querySelector('#view-bracket .lb-hero p');
+  if (hero) hero.innerHTML = '🏆 Knockout Bracket';
+  if (sub) sub.textContent = 'Live results — updates automatically as matches finish';
+  renderBracket();
+}
+
 function renderBracket() {
-  if (!koViewMode) {
+  if (!koViewMode && !koResultsMode) {
     if (Object.keys(koState).length === 0) koInitState();
     koResolveDownstream();
   }
@@ -1995,8 +2068,36 @@ function renderBracket() {
     </div>`;
   };
 
+  // ── Read-only REAL results card (live tournament bracket) ──
+  const resultsCard = (id, meta) => {
+    const res = (koResultsMode && koResultsMode.resBySlot[id]) || null;
+    const cls = id === 'FINAL' ? 'ko-match ko-final-match' : 'ko-match';
+    const dateStr = KO_DATES[id] ? `<span class="ko-date">${KO_DATES[id]}</span>` : '';
+    const metaHtml = (meta || dateStr) ? `<div class="ko-meta">${meta || ''}${meta && dateStr ? ' · ' : ''}${dateStr}</div>` : '';
+    if (!res || !res.home_team) {
+      return `<div class="${cls}">${metaHtml}<div class="ko-team tbd"><span>—</span></div><div class="ko-vs">vs</div><div class="ko-team tbd"><span>—</span></div></div>`;
+    }
+    const hasScore = res.home_score != null && res.away_score != null;
+    // Who advanced (real): winner field, else decisive score
+    let adv = res.winner || null;
+    if (!adv && hasScore && res.home_score !== res.away_score) {
+      adv = res.home_score > res.away_score ? res.home_team : res.away_team;
+    }
+    const side = (team, score) => {
+      if (!team) return `<div class="ko-team tbd"><span>TBD</span></div>`;
+      const advCls = (adv && adv === team) ? ' advanced' : '';
+      return `<div class="ko-team${advCls}"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${hasScore ? score : ''}</span></div>`;
+    };
+    return `<div class="${cls}">${metaHtml}
+      ${side(res.home_team, res.home_score)}
+      <div class="ko-vs">vs</div>
+      ${side(res.away_team, res.away_score)}
+    </div>`;
+  };
+
   // Build an interactive prediction card for a slot
   const predCard = (id, meta) => {
+    if (koResultsMode) return resultsCard(id, meta);
     if (koViewMode) return scoredCard(id, meta);
     const st = koState[id];
     const cls = id === 'FINAL' ? 'ko-match ko-pred ko-final-match' : 'ko-match ko-pred';
@@ -2573,7 +2674,10 @@ async function loadLeaderboard() {
   }
   // "Bracket" nav only makes sense once a name is entered (or admin)
   const navB = document.getElementById('lb-nav-bracket');
-  if (navB) navB.style.display = (currentPlayer || isAdminMode) ? 'inline-block' : 'none';
+  // Show "Bracket" if logged in / admin, OR once the window has closed
+  // (then it's a read-only live results bracket, open to everyone).
+  const koClosedNav = koWindowState() === 'closed';
+  if (navB) navB.style.display = (currentPlayer || isAdminMode || koClosedNav) ? 'inline-block' : 'none';
   // Admin-only KO participation checker
   const akc = document.getElementById('admin-ko-check-wrap');
   if (akc) akc.style.display = isAdminMode ? 'block' : 'none';
@@ -2616,6 +2720,51 @@ async function loadLeaderboard() {
 
     // Update subtitle + matches panel (group context)
     renderMatchesPanel(results, koResults);
+
+    // ── Left-panel statistics (champion picks + live player rankings) ──
+    try {
+      // 1) Top 5 champion picks (each player's FINAL champion)
+      const champCount = {};
+      koPreds.filter(p => p.slot === 'FINAL').forEach(fp => {
+        let champ = null;
+        if (fp.home_score != null && fp.away_score != null) {
+          if (fp.home_score > fp.away_score) champ = fp.home_team;
+          else if (fp.away_score > fp.home_score) champ = fp.away_team;
+          else champ = fp.advance || null;
+        }
+        if (champ) champCount[champ] = (champCount[champ] || 0) + 1;
+      });
+      const champTop = Object.entries(champCount)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
+      const champEl = document.getElementById('stat-champions');
+      if (champEl) {
+        champEl.innerHTML = champTop.length === 0
+          ? '<div class="no-matches">No predictions yet</div>'
+          : champTop.map(([team, n]) =>
+              `<div class="stat-row"><span class="stat-team">${flag(team)}<span>${team}</span></span><span class="stat-count">${n}</span></div>`).join('');
+      }
+
+      // 2 & 3) Live player rankings — exact + correct, WHOLE tournament (group + KO)
+      const allStats = players.map(p => {
+        const g = groupScore(p.name);
+        const k = koScore(p.name);
+        return { name: p.name, exact: g.exact + k.exact, correct: g.correct + k.correct,
+                 pts: g.pts + k.pts };
+      });
+      const renderTop3 = (key, elId) => {
+        const top = [...allStats].filter(s => s[key] > 0)
+          .sort((a, b) => b[key] - a[key] || b.pts - a.pts || a.name.localeCompare(b.name))
+          .slice(0, 3);
+        const el = document.getElementById(elId);
+        if (!el) return;
+        el.innerHTML = top.length === 0
+          ? '<div class="no-matches">No results yet</div>'
+          : top.map((s, i) =>
+              `<div class="stat-row"><span class="stat-team"><span class="stat-rank">${i+1}</span>${s.name}</span><span class="stat-count">${s[key]}</span></div>`).join('');
+      };
+      renderTop3('exact', 'stat-exact');
+      renderTop3('correct', 'stat-correct');
+    } catch(e) {}
     const playedMatches = results.length;
     document.getElementById('lb-subtitle').textContent =
       lbTab === 'knockout' ? `Knockout stage — ${koResults.filter(r=>r.home_score!=null).length} matches scored`
