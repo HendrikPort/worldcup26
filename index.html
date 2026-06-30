@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v105-LIVE — actual-result text brighter/bolder for readability -->
+<!-- v106-LIVE — Overall click opens KO bracket; actual line shows 90min + ET + penalties -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2061,11 +2061,18 @@ function renderBracket() {
       const advCls = (predAdv && predAdv === team) ? ' advanced' : '';
       return `<div class="ko-team${advCls}"><span class="ko-team-side">${flag(team)}<span>${team}</span></span><span class="ko-score-static">${score}</span></div>`;
     };
-    // Real 90-min result line — only for finished matches
+    // Real result line — 90-min, plus ET and penalties if the match went further
     let actualLine = '';
     if (res && res.home_team && res.away_team &&
         res.home_score != null && res.away_score != null) {
-      actualLine = `<div class="ko-actual">Actual: ${res.home_team} ${res.home_score}–${res.away_score} ${res.away_team}</div>`;
+      let parts = `${res.home_team} ${res.home_score}–${res.away_score} ${res.away_team}`;
+      if (res.et_home != null && res.et_away != null) {
+        parts += ` · ET ${res.et_home}–${res.et_away}`;
+      }
+      if (res.pen_home != null && res.pen_away != null) {
+        parts += ` · pens ${res.pen_home}–${res.pen_away}`;
+      }
+      actualLine = `<div class="ko-actual">Actual: ${parts}</div>`;
     }
     return `<div class="${cls} ${tint}">${metaHtml}${ptsBadge}
       ${side(p.home_team, p.home_score)}
@@ -2841,8 +2848,8 @@ async function openPlayerModal(name) {
   document.getElementById('modal-player-pts').textContent = 'Loading…';
   document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:2rem;"><span class="spinner"></span></div>';
 
-  // On the Knockout tab, show the player's KO bracket as a full tree (view mode).
-  if (lbTab === 'knockout') { closeModal(); return koOpenPlayerBracket(name); }
+  // On the Knockout OR Overall tab, show the player's KO bracket (view mode).
+  if (lbTab === 'knockout' || lbTab === 'overall') { closeModal(); return koOpenPlayerBracket(name); }
 
   try {
     const [preds, results] = await Promise.all([
