@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v106-LIVE — Overall click opens KO bracket; actual line shows 90min + ET + penalties -->
+<!-- v108-LIVE — R16+ draw scoring added (3 exact draw / 1 any draw); winner rule intact -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1608,22 +1608,31 @@ function koScoreSlot(pr, res) {
     return a === realOutcome ? 1 : 0;
   }
 
-  // R16 onward: fixed positions
-  const homeOK = pr.home_team === res.home_team;
-  const awayOK = pr.away_team === res.away_team;
-  if (!homeOK && !awayOK) return 0;
-  const predOutcome = pr.home_score > pr.away_score ? 'H'
-                    : pr.home_score < pr.away_score ? 'A' : 'D';
+  // R16 onward: home/away positions are fixed by the bracket.
+  const realIsDraw = res.home_score === res.away_score;
+  const predIsDraw = pr.home_score === pr.away_score;
 
-  if (homeOK && awayOK) {
-    if (pr.home_score === res.home_score && pr.away_score === res.away_score) return 3;
-    return predOutcome === realOutcome ? 1 : 0;
+  // Case B: you predicted a DRAW. Score only if the real 90-min result is also
+  // a draw: 3 if the exact draw score matches, 1 for any other draw.
+  if (predIsDraw) {
+    if (!realIsDraw) return 0;                        // real had a winner → 0
+    if (pr.home_score === res.home_score) return 3;   // exact draw (2-2 = 2-2)
+    return 1;                                         // any other draw
   }
-  // exactly one side correct → score that team's goals + outcome
-  const goalsMatch = homeOK ? (pr.home_score === res.home_score)
-                            : (pr.away_score === res.away_score);
-  if (goalsMatch && predOutcome === realOutcome) return 3;
-  return predOutcome === realOutcome ? 1 : 0;
+
+  // Case A: you predicted a WINNER. Score only if your predicted winner is the
+  // correct team on the correct side AND wins in reality (90-min).
+  const predWinnerSide = pr.home_score > pr.away_score ? 'home' : 'away';
+  const myWinner = predWinnerSide === 'home' ? pr.home_team : pr.away_team;
+  const realOnThatSide = predWinnerSide === 'home' ? res.home_team : res.away_team;
+  if (myWinner !== realOnThatSide) return 0;          // your winner not that team/side
+
+  const realWinnerSide = res.home_score > res.away_score ? 'home'
+                       : res.away_score > res.home_score ? 'away' : 'draw';
+  if (realWinnerSide !== predWinnerSide) return 0;    // your team didn't win → 0
+
+  if (pr.home_score === res.home_score && pr.away_score === res.away_score) return 3;
+  return 1;
 }
 
 function koScorePlayer(preds, resultsBySlot) {
