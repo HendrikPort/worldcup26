@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HUUM World Cup 2026</title>
-<!-- v109-LIVE — finished KO matches now appear in Results panel (with pens) -->
+<!-- v110-LIVE — results bracket renders a known team even when its opponent is still TBD (half-resolved slots like QF vs Morocco no longer blank the whole card) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -2097,7 +2097,7 @@ function renderBracket() {
     const cls = id === 'FINAL' ? 'ko-match ko-final-match' : 'ko-match';
     const dateStr = KO_DATES[id] ? `<span class="ko-date">${KO_DATES[id]}</span>` : '';
     const metaHtml = (meta || dateStr) ? `<div class="ko-meta">${meta || ''}${meta && dateStr ? ' · ' : ''}${dateStr}</div>` : '';
-    if (!res || !res.home_team) {
+    if (!res || (!res.home_team && !res.away_team)) {
       return `<div class="${cls}">${metaHtml}<div class="ko-team tbd"><span>—</span></div><div class="ko-vs">vs</div><div class="ko-team tbd"><span>—</span></div></div>`;
     }
     const hasScore = res.home_score != null && res.away_score != null;
