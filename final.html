@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUUM WC26 — Champions</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#e8c84a;
+  --gold-deep:#b8942f;
+  --silver:#c9d2e0;
+  --bronze:#cd8a52;
+  --dark:#0d1117;
+  --dark2:#080b12;
+  --surface:rgba(10,14,26,0.85);
+  --border:rgba(255,255,255,0.1);
+  --border2:rgba(255,255,255,0.18);
+  --text:#f0f4ff;
+  --text2:#9aabcc;
+  --text3:#5a6a88;
+  --green:#4ade80;
+  --yellow:#facc15;
+}
+body{
+  font-family:'Barlow',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(232,200,74,0.12), transparent 60%),
+    radial-gradient(900px 500px at 50% 110%, rgba(59,130,246,0.06), transparent 60%),
+    var(--dark);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Champion hero ── */
+.hero{
+  position:relative;
+  text-align:center;
+  padding:3.5rem 1.5rem 2rem;
+  max-width:760px;
+  margin:0 auto;
+}
+.eyebrow{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;letter-spacing:0.4em;text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:1.5rem;
+}
+.eyebrow span{color:var(--gold);}
+
+.champ-crown{
+  font-size:2.2rem;line-height:1;
+  margin-bottom:0.5rem;
+  filter:drop-shadow(0 0 20px rgba(232,200,74,0.5));
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.champ-label{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:14px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:1rem;
+}
+.champ-name{
+  display:flex;align-items:center;justify-content:center;gap:1.25rem;
+  margin-bottom:1.25rem;
+}
+.champ-name img{
+  width:72px;height:auto;border-radius:4px;
+  box-shadow:0 0 0 3px var(--gold), 0 8px 32px rgba(0,0,0,0.6);
+}
+.champ-name h1{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3.5rem,12vw,6.5rem);
+  letter-spacing:0.04em;line-height:0.9;
+  color:#fff;
+  text-shadow:0 4px 40px rgba(232,200,74,0.35);
+}
+.scoreline{
+  display:inline-flex;flex-direction:column;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:14px 26px;
+  margin-top:0.5rem;
+}
+.scoreline .teams{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text2);
+  display:flex;align-items:center;gap:10px;
+}
+.scoreline .teams img{width:24px;height:18px;border-radius:2px;vertical-align:middle;}
+.scoreline .verdict{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--gold);
+}
+.scoreline .verdict b{color:#fff;font-weight:700;}
+
+/* ── Podium ── */
+.podium-section{
+  max-width:760px;margin:2.5rem auto 0;padding:0 1.5rem;
+}
+.section-eyebrow{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:12px;letter-spacing:0.28em;text-transform:uppercase;
+  color:var(--text3);
+  text-align:center;
+  margin-bottom:1.75rem;
+}
+.podium{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  align-items:end;
+  gap:12px;
+  max-width:560px;margin:0 auto;
+}
+.plinth{
+  position:relative;
+  border-radius:12px 12px 0 0;
+  padding:1rem 0.75rem 1.25rem;
+  text-align:center;
+  border:1px solid var(--border2);
+  border-bottom:none;
+  background:linear-gradient(to bottom, rgba(255,255,255,0.06), rgba(255,255,255,0.01));
+}
+.plinth .rank{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:2.4rem;line-height:1;
+  margin-bottom:0.4rem;
+}
+.plinth .pname{
+  font-weight:700;font-size:15px;color:#fff;
+  line-height:1.2;margin-bottom:0.35rem;
+  word-break:break-word;
+}
+.plinth .ppts{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.5rem;letter-spacing:0.03em;
+}
+.plinth .plabel{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text3);
+}
+.plinth.p1{
+  height:186px;
+  border-color:var(--gold);
+  background:linear-gradient(to bottom, rgba(232,200,74,0.22), rgba(232,200,74,0.03));
+  box-shadow:0 0 30px rgba(232,200,74,0.18);
+}
+.plinth.p1 .rank,.plinth.p1 .ppts{color:var(--gold);}
+.plinth.p2{
+  height:150px;
+  border-color:rgba(201,210,224,0.5);
+  background:linear-gradient(to bottom, rgba(201,210,224,0.15), rgba(201,210,224,0.02));
+}
+.plinth.p2 .rank,.plinth.p2 .ppts{color:var(--silver);}
+.plinth.p3{
+  height:124px;
+  border-color:rgba(205,138,82,0.5);
+  background:linear-gradient(to bottom, rgba(205,138,82,0.15), rgba(205,138,82,0.02));
+}
+.plinth.p3 .rank,.plinth.p3 .ppts{color:var(--bronze);}
+.podium-floor{
+  height:6px;
+  max-width:560px;margin:0 auto;
+  background:linear-gradient(to right, transparent, var(--border2), transparent);
+}
+
+/* ── Leaderboard ── */
+.lb-section{
+  max-width:760px;margin:2.5rem auto 4rem;padding:0 1.5rem;
+}
+.lb-legend{
+  display:flex;gap:1.25rem;align-items:center;justify-content:center;
+  margin-bottom:1rem;flex-wrap:wrap;
+}
+.lb-leg-item{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--text3);
+  font-family:'Barlow Condensed',sans-serif;
+  letter-spacing:0.06em;
+}
+.leg-dot{width:9px;height:9px;border-radius:2px;}
+.leg-green{background:var(--green);}
+.leg-yellow{background:var(--yellow);}
+
+.lb-table{
+  width:100%;border-collapse:collapse;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(8px);
+}
+.lb-table thead th{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:10px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--text3);padding:12px;text-align:center;
+  border-bottom:1px solid var(--border2);
+}
+.lb-table thead th:nth-child(2){text-align:left;}
+.lb-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.05);}
+.lb-table tbody tr:last-child{border-bottom:none;}
+.lb-table tbody tr.medal-1{background:rgba(232,200,74,0.07);}
+.lb-table tbody tr.medal-2{background:rgba(201,210,224,0.05);}
+.lb-table tbody tr.medal-3{background:rgba(205,138,82,0.05);}
+.lb-table td{padding:13px 12px;text-align:center;font-size:14px;}
+.lb-table td:nth-child(2){text-align:left;}
+.lb-pos{font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--text3);}
+.lb-pos.gold{color:var(--gold);}
+.lb-pos.silver{color:var(--silver);}
+.lb-pos.bronze{color:var(--bronze);}
+.lb-name{font-weight:600;color:#fff;}
+.lb-pts{font-weight:700;font-size:16px;color:var(--gold);}
+.lb-exact{color:var(--green);font-weight:600;}
+.lb-correct{color:var(--yellow);font-weight:600;}
+.loading,.errorbox{
+  text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;
+}
+.errorbox{color:#f87171;}
+.spinner{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;
+  border-radius:50%;animation:spin 0.7s linear infinite;
+  vertical-align:middle;margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer-note{
+  text-align:center;font-size:11px;color:var(--text3);
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;
+  margin-top:1.25rem;
+}
+
+@media (max-width:520px){
+  .champ-name img{width:56px;}
+  .plinth .pname{font-size:13px;}
+  .lb-table td{padding:11px 7px;font-size:13px;}
+}
+@media (prefers-reduced-motion:reduce){
+  .champ-crown{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">HUUM <span>World Cup 2026</span> · Prediction League</div>
+  <div class="champ-crown">🏆</div>
+  <div class="champ-label">World Champions</div>
+  <div class="champ-name">
+    <img src="https://flagcdn.com/96x72/es.png" alt="Spain">
+    <h1>SPAIN</h1>
+  </div>
+  <div class="scoreline">
+    <div class="teams">
+      <span><img src="https://flagcdn.com/32x24/es.png" alt="Spain"> Spain</span>
+      <span>1–0</span>
+      <span>Argentina <img src="https://flagcdn.com/32x24/ar.png" alt="Argentina"></span>
+    </div>
+    <div class="verdict">0–0 after 90' · Won <b>1–0</b> in extra time</div>
+  </div>
+</div>
+
+<div class="podium-section">
+  <div class="section-eyebrow">Final Standings — Top 3</div>
+  <div class="podium" id="podium">
+    <div class="loading" style="grid-column:1/-1;"><span class="spinner"></span>Loading podium…</div>
+  </div>
+  <div class="podium-floor"></div>
+</div>
+
+<div class="lb-section">
+  <div class="section-eyebrow">Full Leaderboard</div>
+  <div class="lb-legend">
+    <div class="lb-leg-item"><span class="leg-dot leg-green"></span>Exact score (3 pts)</div>
+    <div class="lb-leg-item"><span class="leg-dot leg-yellow"></span>Correct result (1 pt)</div>
+    <div class="lb-leg-item">🏆 Champion bonus (+5)</div>
+  </div>
+  <table class="lb-table">
+    <thead>
+      <tr><th>#</th><th>Name</th><th>Pts</th><th>Exact</th><th>Result</th></tr>
+    </thead>
+    <tbody id="lb-tbody">
+      <tr><td colspan="5" class="loading"><span class="spinner"></span>Loading standings…</td></tr>
+    </tbody>
+  </table>
+  <div class="footer-note">Ranked by points, then exact scores. Champions decided at HUUMIMAA.</div>
+</div>
+
+<script>
+// ── Supabase config (same project as the main app) ──
+const SUPABASE_URL = 'https://xpngjnvgkywaoikhuzym.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhwbmdqbnZna3l3YW9pa2h1enltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjc3MjksImV4cCI6MjA5NTkwMzcyOX0.8XBqHQoZcel54oIwU7prAOnqsZyDD8bw8sDiUbJK9j0';
+
+async function sbFetch(path, options={}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      ...(options.headers||{})
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// Paginated fetch helper (PostgREST caps at 1000 rows)
+async function fetchAll(pathBase) {
+  const size = 1000; let from = 0; let all = [];
+  while (true) {
+    const page = await sbFetch(pathBase, {
+      headers: { 'Range-Unit':'items', 'Range':`${from}-${from+size-1}` }
+    });
+    all = all.concat(page);
+    if (page.length < size) break;
+    from += size;
+  }
+  return all;
+}
+
+// ══ Scoring — copied verbatim from the main app so numbers match ══
+function koScoreSlot(pr, res) {
+  if (!pr || !res) return 0;
+  if (res.home_team == null || res.away_team == null) return 0;
+  if (res.home_score == null || res.away_score == null) return 0;
+  if (pr.home_score == null || pr.away_score == null) return 0;
+  const realOutcome = res.home_score > res.away_score ? 'H'
+                    : res.home_score < res.away_score ? 'A' : 'D';
+  if (pr.slot && pr.slot.startsWith('R32-')) {
+    const predPair = [pr.home_team, pr.away_team].sort().join('|');
+    const realPair = [res.home_team, res.away_team].sort().join('|');
+    if (predPair !== realPair) return 0;
+    let phs, pas;
+    if (pr.home_team === res.home_team) { phs = pr.home_score; pas = pr.away_score; }
+    else { phs = pr.away_score; pas = pr.home_score; }
+    if (phs === res.home_score && pas === res.away_score) return 3;
+    const a = phs>pas?'H':phs<pas?'A':'D';
+    return a === realOutcome ? 1 : 0;
+  }
+  const realIsDraw = res.home_score === res.away_score;
+  const predIsDraw = pr.home_score === pr.away_score;
+  if (predIsDraw) {
+    if (!realIsDraw) return 0;
+    if (pr.home_score === res.home_score) return 3;
+    return 1;
+  }
+  const predWinnerSide = pr.home_score > pr.away_score ? 'home' : 'away';
+  const myWinner = predWinnerSide === 'home' ? pr.home_team : pr.away_team;
+  const realOnThatSide = predWinnerSide === 'home' ? res.home_team : res.away_team;
+  if (myWinner !== realOnThatSide) return 0;
+  const realWinnerSide = res.home_score > res.away_score ? 'home'
+                       : res.away_score > res.home_score ? 'away' : 'draw';
+  if (realWinnerSide !== predWinnerSide) return 0;
+  if (pr.home_score === res.home_score && pr.away_score === res.away_score) return 3;
+  return 1;
+}
+
+function koScorePlayer(preds, resultsBySlot) {
+  let pts = 0, exact = 0, correct = 0;
+  preds.forEach(pr => {
+    const res = resultsBySlot[pr.slot];
+    const s = koScoreSlot({ ...pr }, res);
+    if (s === 3) { pts += 3; exact++; }
+    else if (s === 1) { pts += 1; correct++; }
+  });
+  let championBonus = 0;
+  const fp = preds.find(p => p.slot === 'FINAL');
+  const fr = resultsBySlot['FINAL'];
+  if (fp && fr && fr.home_team && fr.away_team &&
+      fr.home_score != null && fr.away_score != null) {
+    let realChamp = fr.winner || null;
+    if (!realChamp && fr.home_score !== fr.away_score) {
+      realChamp = fr.home_score > fr.away_score ? fr.home_team : fr.away_team;
+    }
+    let predChamp = null;
+    if (fp.home_score != null && fp.away_score != null) {
+      if (fp.home_score > fp.away_score) predChamp = fp.home_team;
+      else if (fp.away_score > fp.home_score) predChamp = fp.away_team;
+      else predChamp = fp.advance || null;
+    }
+    if (realChamp && predChamp && realChamp === predChamp) {
+      championBonus = 5; pts += 5;
+    }
+  }
+  return { pts, exact, correct, championBonus };
+}
+
+function groupScoreFor(name, predictions, resultsMap) {
+  const my = predictions.filter(pr => pr.player_name === name);
+  let pts=0, exact=0, correct=0;
+  my.forEach(pr => {
+    const res = resultsMap[pr.match];
+    if (!res || res.h === null || res.a === null) return;
+    if (pr.home_score === res.h && pr.away_score === res.a) { pts+=3; exact++; }
+    else {
+      const a = pr.home_score>pr.away_score?'H':pr.home_score<pr.away_score?'A':'D';
+      const b = res.h>res.a?'H':res.h<res.a?'A':'D';
+      if (a===b){pts+=1;correct++;}
+    }
+  });
+  return {pts,exact,correct};
+}
+
+async function load() {
+  try {
+    const [players, predictions, results, koPreds, koResults] = await Promise.all([
+      sbFetch('players?select=*&order=id.asc'),
+      fetchAll('predictions?select=*&order=player_name.asc,match.asc'),
+      sbFetch('results?select=*'),
+      fetchAll('ko_predictions?select=*&order=id.asc'),
+      sbFetch('ko_results?select=*')
+    ]);
+
+    const resultsMap = {};
+    results.forEach(r => { resultsMap[r.match] = { h: r.home_score, a: r.away_score }; });
+    const koResBySlot = {};
+    koResults.forEach(r => { koResBySlot[r.slot] = r; });
+
+    const scored = players.map(p => {
+      const g = groupScoreFor(p.name, predictions, resultsMap);
+      const k = koScorePlayer(koPreds.filter(x => x.player === p.name), koResBySlot);
+      return {
+        name: p.name,
+        pts: g.pts + k.pts,
+        exact: g.exact + k.exact,
+        correct: g.correct + k.correct,
+        champBonus: k.championBonus
+      };
+    }).sort((a,b) => b.pts - a.pts || b.exact - a.exact);
+
+    renderPodium(scored);
+    renderTable(scored);
+  } catch (e) {
+    document.getElementById('podium').innerHTML =
+      `<div class="errorbox" style="grid-column:1/-1;">Couldn't load standings. Refresh to try again.</div>`;
+    document.getElementById('lb-tbody').innerHTML =
+      `<tr><td colspan="5" class="errorbox">Couldn't load the leaderboard. Refresh to try again.</td></tr>`;
+  }
+}
+
+function renderPodium(scored) {
+  const top3 = scored.slice(0, 3);
+  if (top3.length < 3) {
+    document.getElementById('podium').innerHTML =
+      `<div class="errorbox" style="grid-column:1/-1;">Not enough players to show a podium yet.</div>`;
+    return;
+  }
+  // Visual order: 2nd | 1st | 3rd
+  const order = [
+    { p: top3[1], cls:'p2', rank:2, label:'Silver' },
+    { p: top3[0], cls:'p1', rank:1, label:'Champion' },
+    { p: top3[2], cls:'p3', rank:3, label:'Bronze' }
+  ];
+  document.getElementById('podium').innerHTML = order.map(o => `
+    <div class="plinth ${o.cls}">
+      <div class="rank">${o.rank}</div>
+      <div class="pname">${escapeHtml(o.p.name)}</div>
+      <div class="ppts">${o.p.pts}</div>
+      <div class="plabel">${o.label}</div>
+    </div>`).join('');
+}
+
+function renderTable(scored) {
+  const tbody = document.getElementById('lb-tbody');
+  if (scored.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading">No players yet.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = scored.map((p, i) => {
+    const medalCls = i===0?'medal-1':i===1?'medal-2':i===2?'medal-3':'';
+    const posCls   = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const champ = p.champBonus ? ' 🏆' : '';
+    return `<tr class="${medalCls}">
+      <td><span class="lb-pos ${posCls}">${i+1}</span></td>
+      <td><span class="lb-name">${escapeHtml(p.name)}${champ}</span></td>
+      <td><span class="lb-pts">${p.pts}</span></td>
+      <td><span class="lb-exact">${p.exact}</span></td>
+      <td><span class="lb-correct">${p.correct}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+load();
+</script>
+</body>
+</html>
