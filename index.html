@@ -477,10 +477,9 @@ function renderTable(scored) {
   tbody.innerHTML = scored.map((p, i) => {
     const medalCls = i===0?'medal-1':i===1?'medal-2':i===2?'medal-3':'';
     const posCls   = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const champ = p.champBonus ? ' 🏆' : '';
     return `<tr class="${medalCls}">
       <td><span class="lb-pos ${posCls}">${i+1}</span></td>
-      <td><span class="lb-name">${escapeHtml(p.name)}${champ}</span></td>
+      <td><span class="lb-name">${escapeHtml(p.name)}</span></td>
       <td><span class="lb-pts">${p.pts}</span></td>
       <td><span class="lb-exact">${p.exact}</span></td>
       <td><span class="lb-correct">${p.correct}</span></td>
