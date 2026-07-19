@@ -217,7 +217,14 @@ body{
 .lb-pos.bronze{color:var(--bronze);}
 .lb-name{font-weight:600;color:#fff;}
 .lb-pts{font-weight:700;font-size:16px;color:var(--gold);}
-.lb-exact{color:var(--green);font-weight:600;}
+.lb-exact{color:var(--green);font-weight:700;font-size:16px;}
+.lb-exact.tie-exact{
+  color:var(--gold);
+  background:rgba(232,200,74,0.14);
+  border:1px solid rgba(232,200,74,0.4);
+  border-radius:6px;
+  padding:2px 8px;
+}
 .lb-correct{color:var(--yellow);font-weight:600;}
 .loading,.errorbox{
   text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;
@@ -289,7 +296,7 @@ body{
       <tr><td colspan="5" class="loading"><span class="spinner"></span>Loading standings…</td></tr>
     </tbody>
   </table>
-  <div class="footer-note">Ranked by points, then exact scores. Champions decided at HUUMIMAA.</div>
+  <div class="footer-note">Võrdsete punktide korral otsustab exact score'ide arv.</div>
 </div>
 
 <script>
@@ -474,14 +481,20 @@ function renderTable(scored) {
     tbody.innerHTML = `<tr><td colspan="5" class="loading">No players yet.</td></tr>`;
     return;
   }
+  // Mark players whose points total is shared with at least one other
+  // player — for them the exact-score column is what breaks the tie.
+  const ptsCount = {};
+  scored.forEach(p => { ptsCount[p.pts] = (ptsCount[p.pts] || 0) + 1; });
+
   tbody.innerHTML = scored.map((p, i) => {
     const medalCls = i===0?'medal-1':i===1?'medal-2':i===2?'medal-3':'';
     const posCls   = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const tieCls   = ptsCount[p.pts] > 1 ? ' tie-exact' : '';
     return `<tr class="${medalCls}">
       <td><span class="lb-pos ${posCls}">${i+1}</span></td>
       <td><span class="lb-name">${escapeHtml(p.name)}</span></td>
       <td><span class="lb-pts">${p.pts}</span></td>
-      <td><span class="lb-exact">${p.exact}</span></td>
+      <td><span class="lb-exact${tieCls}">${p.exact}</span></td>
       <td><span class="lb-correct">${p.correct}</span></td>
     </tr>`;
   }).join('');
